@@ -121,7 +121,7 @@ export default function GeneratePage() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto px-4 py-4">
         <AnimatePresence mode="wait">
           {/* Step 1: Upload */}
           {step === "upload" && (
@@ -130,11 +130,11 @@ export default function GeneratePage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
+              className="space-y-4"
             >
               <div>
-                <h1 className="text-2xl font-display font-bold text-white">Let&apos;s see the real you.</h1>
-                <p className="text-white/50 mt-1">3 selfies. Different angles. Good lighting. No filters — the AI needs your actual face, not the Instagram version.</p>
+                <h1 className="text-xl font-display font-bold text-white">Let&apos;s see the real you.</h1>
+                <p className="text-sm text-white/50 mt-0.5">Upload 1-5 selfies. No filters — the AI needs your actual face.</p>
               </div>
 
               <UsageIndicator tier={tier} generationsUsed={generationsUsed} />
@@ -145,7 +145,7 @@ export default function GeneratePage() {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <Button
                     onClick={() => setStep("style")}
-                    className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-base font-medium gap-2"
+                    className="w-full h-11 bg-violet-600 hover:bg-violet-700 text-sm font-medium gap-2"
                   >
                     Pick Your First Impression
                     <ArrowRight className="h-4 w-4" />
