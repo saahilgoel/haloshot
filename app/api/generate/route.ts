@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     }
 
     const numImages = isPro ? PRO_IMAGES_PER_GENERATION : DEFAULT_IMAGES_PER_GENERATION;
-    const batchSize = Math.min(numImages, 4);
+    const batchSize = Math.min(numImages, 2); // Keep small to avoid Replicate rate limits + Vercel timeout
 
     // Build prompt
     const subjectDescription = buildSubjectDescription(faceProfile.detected_features);
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
 
     if (jobError || !job) {
       console.error("Job creation error:", jobError);
-      return NextResponse.json({ error: "Failed to create generation job" }, { status: 500 });
+      return NextResponse.json({ error: `Failed to create generation job: ${jobError?.message || "unknown"}` }, { status: 500 });
     }
 
     // Fire off async predictions with webhooks — returns IMMEDIATELY
@@ -118,7 +118,10 @@ export async function POST(req: NextRequest) {
     try {
       const predictionIds: string[] = [];
 
+      // Send predictions sequentially with small delays to avoid Replicate rate limits
       for (let i = 0; i < batchSize; i++) {
+        if (i > 0) await new Promise(r => setTimeout(r, 1500)); // 1.5s delay between requests
+
         const res = await fetch("https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-dev/predictions", {
           method: "POST",
           headers: {
@@ -183,7 +186,8 @@ export async function POST(req: NextRequest) {
     }
   } catch (error) {
     console.error("Generation error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: `Internal server error: ${msg}` }, { status: 500 });
   }
 }
 
