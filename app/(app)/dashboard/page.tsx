@@ -10,9 +10,7 @@ import {
   TrendingUp,
   ArrowRight,
   Camera,
-  BarChart3,
   Vote,
-  Users,
   RefreshCw,
 } from "lucide-react";
 import {
@@ -20,38 +18,10 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-
-// TODO: replace with real data from auth + database
-const mockUser = { name: "Saahil" };
-
-const mockHaloScore: number | null = 84;
-const mockBestScore = 91;
-const mockAvgGlowUp = 12;
-
-const mockStats = {
-  totalHeadshots: 24,
-  bestHaloScore: mockBestScore,
-  avgGlowUp: mockAvgGlowUp,
-};
-
-const mockRecentHeadshots: Array<{
-  id: string;
-  url: string;
-  preset: string;
-  haloScore?: number;
-  date: string;
-}> = [];
-
-const mockActivePolls: Array<{
-  id: string;
-  photoAUrl: string;
-  photoBUrl: string;
-  totalVotes: number;
-  leadingPhoto: "A" | "B";
-  leadPct: number;
-}> = [];
+import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/lib/hooks/useUser";
 
 function useGreeting(): string {
   const [greeting, setGreeting] = useState("Welcome back");
@@ -73,10 +43,51 @@ const stagger = {
   }),
 };
 
+interface RecentHeadshot {
+  id: string;
+  url: string;
+  preset: string;
+  haloScore?: number;
+  date: string;
+}
+
 export default function DashboardPage() {
   const greeting = useGreeting();
-  const hasHeadshots = mockRecentHeadshots.length > 0;
-  const hasScore = mockHaloScore !== null;
+  const { user, profile } = useUser();
+  const [recentHeadshots, setRecentHeadshots] = useState<RecentHeadshot[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const displayName = profile?.full_name?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "there";
+  const haloScore = profile?.current_halo_score ?? null;
+  const totalHeadshots = profile?.generations_count_total ?? 0;
+
+  useEffect(() => {
+    async function fetchRecent() {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("saved_headshots")
+        .select("id, original_url, preset_id, halo_score, created_at")
+        .order("created_at", { ascending: false })
+        .limit(8);
+
+      if (data && data.length > 0) {
+        setRecentHeadshots(data.map(h => ({
+          id: h.id,
+          url: h.original_url,
+          preset: h.preset_id || "Unknown",
+          haloScore: h.halo_score ?? undefined,
+          date: new Date(h.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+        })));
+      }
+      setLoading(false);
+    }
+    fetchRecent();
+  }, []);
+
+  const hasHeadshots = recentHeadshots.length > 0;
+  const hasScore = haloScore !== null;
+  const bestScore = recentHeadshots.reduce((max, h) => Math.max(max, h.haloScore ?? 0), haloScore ?? 0);
+  const avgGlowUp = hasScore && bestScore > 0 ? bestScore - (haloScore ?? 0) : 0;
 
   return (
     <div className="space-y-8">
@@ -87,7 +98,7 @@ export default function DashboardPage() {
         transition={{ duration: 0.4 }}
       >
         <h1 className="font-display text-2xl font-bold sm:text-3xl">
-          {greeting}, {mockUser.name}
+          {greeting}, {displayName}
         </h1>
         <p className="mt-1 text-white/40">
           Here&apos;s how your first impression is performing.
@@ -110,7 +121,7 @@ export default function DashboardPage() {
                   <div className="relative flex h-24 w-24 items-center justify-center rounded-full border-[3px] border-halo/40 bg-black/40">
                     <div className="text-center">
                       <span className="font-display text-4xl font-black text-halo">
-                        {mockHaloScore}
+                        {haloScore}
                       </span>
                     </div>
                   </div>
@@ -121,14 +132,14 @@ export default function DashboardPage() {
 
                 <div>
                   <h2 className="font-display text-xl font-bold text-white">
-                    {mockHaloScore >= 80
+                    {haloScore! >= 80
                       ? "Strong first impression."
-                      : mockHaloScore >= 60
+                      : haloScore! >= 60
                         ? "Room to improve."
                         : "Your photo is underselling you."}
                   </h2>
                   <p className="mt-1 text-sm text-white/40">
-                    {mockHaloScore >= 80
+                    {haloScore! >= 80
                       ? "You're making an above-average first impression. The halo effect is working for you."
                       : "Most people underestimate how much their photo matters. Let's fix that."}
                   </p>
@@ -176,19 +187,19 @@ export default function DashboardPage() {
         {[
           {
             label: "Shots Generated",
-            value: mockStats.totalHeadshots,
+            value: totalHeadshots,
             icon: ImageIcon,
             color: "text-violet-400",
           },
           {
             label: "Peak Halo Score",
-            value: mockStats.bestHaloScore,
+            value: bestScore,
             icon: Trophy,
             color: "text-halo",
           },
           {
             label: "Avg Glow-Up",
-            value: `+${mockStats.avgGlowUp}`,
+            value: `+${avgGlowUp}`,
             icon: TrendingUp,
             color: "text-lime",
           },
@@ -251,63 +262,8 @@ export default function DashboardPage() {
         </Card>
       </motion.div>
 
-      {/* Active Polls */}
-      {mockActivePolls.length > 0 && (
-        <motion.div custom={5} initial="hidden" animate="visible" variants={stagger}>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-display text-lg font-semibold text-white">
-              Active Polls
-            </h2>
-            <Link
-              href="/pick/new"
-              className="text-sm text-violet-400 hover:text-violet-300"
-            >
-              Create new
-            </Link>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {mockActivePolls.map((poll) => (
-              <Card
-                key={poll.id}
-                className="overflow-hidden border-white/5 bg-white/[0.02]"
-              >
-                <CardContent className="p-4">
-                  <div className="mb-3 flex gap-2">
-                    <div className="relative h-16 w-12 overflow-hidden rounded-lg">
-                      <img
-                        src={poll.photoAUrl}
-                        alt="Photo A"
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div className="relative h-16 w-12 overflow-hidden rounded-lg">
-                      <img
-                        src={poll.photoBUrl}
-                        alt="Photo B"
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-3.5 w-3.5 text-white/40" />
-                      <span className="text-sm text-white/50">
-                        {poll.totalVotes} votes
-                      </span>
-                    </div>
-                    <Badge className="bg-violet-500/10 text-violet-400">
-                      Photo {poll.leadingPhoto} leads {poll.leadPct}%
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Help Me Pick CTA (when no active polls) */}
-      {mockActivePolls.length === 0 && hasHeadshots && (
+      {/* Help Me Pick CTA */}
+      {hasHeadshots && (
         <motion.div custom={5} initial="hidden" animate="visible" variants={stagger}>
           <Card className="border-dashed border-white/10 bg-white/[0.01]">
             <CardContent className="flex flex-col items-center gap-3 p-6 text-center sm:flex-row sm:text-left">
@@ -354,9 +310,15 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {hasHeadshots ? (
+        {loading ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {mockRecentHeadshots.slice(0, 8).map((headshot, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="aspect-[3/4] rounded-xl" />
+            ))}
+          </div>
+        ) : hasHeadshots ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {recentHeadshots.slice(0, 8).map((headshot, i) => (
               <motion.div
                 key={headshot.id}
                 custom={i + 6}

@@ -27,12 +27,12 @@ export function useSubscription(): UseSubscriptionReturn {
 
     const isPeriodActive = periodEnd
       ? new Date(periodEnd) > new Date()
-      : false;
+      : true; // No end date means no expiry (e.g. manually set tier)
 
     const isActive =
       tier === "free"
         ? true
-        : (status === "active" || status === "trialing") && isPeriodActive;
+        : (status === "active" || status === "trialing" || !status) && isPeriodActive;
 
     const isPro = tier === "pro" && isActive;
     const isTeam = tier === "team" && isActive;

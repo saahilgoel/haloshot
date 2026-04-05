@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Sparkles, Zap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { HeadshotGrid } from "@/components/app/HeadshotGrid";
 import { SubscriptionGate } from "@/components/app/SubscriptionGate";
 import { UsageIndicator } from "@/components/app/UsageIndicator";
 import { useGeneration } from "@/lib/hooks/useGeneration";
+import { useSubscription } from "@/lib/hooks/useSubscription";
 import { STYLE_PRESETS } from "@/lib/ai/prompts";
 import { cn } from "@/lib/utils";
 
@@ -24,10 +26,26 @@ export default function GeneratePage() {
   const [model, setModel] = useState<"studio" | "quick">("studio");
   const [showPaywall, setShowPaywall] = useState(false);
 
-  // TODO: Replace with real user data from useUser/useSubscription hooks
-  const isPro = false;
-  const tier = "free" as const;
-  const generationsUsed = 0;
+  const { tier, isPro, isTeam } = useSubscription();
+  const isProOrTeam = isPro || isTeam;
+  const [generationsUsed, setGenerationsUsed] = useState(0);
+
+  useEffect(() => {
+    async function loadGenerationCount() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("generations_count_total")
+        .eq("id", user.id)
+        .single();
+      if (profile) {
+        setGenerationsUsed(profile.generations_count_total || 0);
+      }
+    }
+    loadGenerationCount();
+  }, []);
 
   const { startGeneration, job, isGenerating, error, generatedImages, similarityScores, isComplete } = useGeneration();
 
@@ -183,7 +201,7 @@ export default function GeneratePage() {
               <PresetPicker
                 selectedPreset={selectedPreset}
                 onSelect={setSelectedPreset}
-                isPro={isPro}
+                isPro={isProOrTeam}
               />
 
               {/* Model Picker */}

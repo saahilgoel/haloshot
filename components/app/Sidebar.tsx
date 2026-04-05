@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useUser } from "@/lib/hooks/useUser";
 import {
   LayoutDashboard,
   Sparkles,
@@ -36,20 +37,16 @@ const navItems: NavItem[] = [
   { label: "Refer & Earn", href: "/refer", icon: Gift },
 ];
 
-// TODO: replace with real user/plan data from auth context
-const mockUser = {
-  name: "Saahil Goel",
-  email: "saahil@haloshot.ai",
-  avatar: null as string | null,
-  plan: "pro" as "free" | "pro" | "team",
-};
-
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { user, profile } = useUser();
 
-  const isTeamPlan = mockUser.plan === "team";
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const displayEmail = user?.email || "";
+  const plan = profile?.subscription_tier || "free";
+  const isTeamPlan = plan === "team";
 
   const tierLabel: Record<string, string> = {
     free: "The Reality Check",
@@ -94,7 +91,7 @@ export function Sidebar() {
         <div className="mx-4 mb-4">
           <div className="flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2.5 py-1.5 text-xs font-medium text-amber-400">
             <Crown className="h-3.5 w-3.5" />
-            {tierLabel[mockUser.plan]}
+            {tierLabel[plan]}
           </div>
         </div>
       )}
@@ -149,13 +146,13 @@ export function Sidebar() {
           )}
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-600 text-xs font-semibold text-white">
-            {mockUser.name.charAt(0)}
+            {displayName.charAt(0)}
           </div>
           {!collapsed && (
             <div className="flex-1 text-left">
-              <p className="truncate text-sm font-medium">{mockUser.name}</p>
+              <p className="truncate text-sm font-medium">{displayName}</p>
               <p className="truncate text-xs text-muted-foreground">
-                {mockUser.email}
+                {displayEmail}
               </p>
             </div>
           )}

@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type SortType = "newest" | "highest" | "favorites";
 type FilterType = "all" | "favorites" | string;
@@ -186,7 +187,19 @@ export default function GalleryPage() {
       </div>
 
       {/* Grid */}
-      {hasHeadshots ? (
+      {loading ? (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="aspect-[3/4] rounded-xl" />
+              <div className="flex items-center justify-between px-1">
+                <Skeleton className="h-4 w-16 rounded-full" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : hasHeadshots ? (
         <>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {filtered.map((headshot, i) => {

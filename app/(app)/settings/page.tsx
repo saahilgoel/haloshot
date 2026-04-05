@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Moon, Sun, Upload, Trash2 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useUser } from "@/lib/hooks/useUser";
 import {
   Card,
   CardContent,
@@ -73,6 +74,13 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
+  const { user, profile } = useUser();
+
+  const fullName = profile?.full_name || user?.user_metadata?.full_name || "";
+  const nameParts = fullName.split(" ");
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts.slice(1).join(" ") || "";
+  const email = user?.email || "";
 
   useEffect(() => setMounted(true), []);
 
@@ -105,7 +113,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="flex items-center gap-6">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-violet-600 text-2xl font-bold text-white">
-                S
+                {firstName.charAt(0) || "?"}
               </div>
               <div className="space-y-2">
                 <Button variant="outline" size="sm">
@@ -129,7 +137,7 @@ export default function SettingsPage() {
                   <Label htmlFor="firstName">First name</Label>
                   <Input
                     id="firstName"
-                    defaultValue="Saahil"
+                    defaultValue={firstName}
                     placeholder="First name"
                   />
                 </div>
@@ -137,7 +145,7 @@ export default function SettingsPage() {
                   <Label htmlFor="lastName">Last name</Label>
                   <Input
                     id="lastName"
-                    defaultValue="Goel"
+                    defaultValue={lastName}
                     placeholder="Last name"
                   />
                 </div>
@@ -147,7 +155,7 @@ export default function SettingsPage() {
                 <Input
                   id="email"
                   type="email"
-                  defaultValue="saahil@haloshot.ai"
+                  defaultValue={email}
                   disabled
                 />
                 <p className="text-xs text-muted-foreground">
