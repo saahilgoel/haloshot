@@ -75,12 +75,21 @@ export default function GalleryPage() {
   useEffect(() => {
     async function fetchHeadshots() {
       const supabase = createClient();
-      const { data } = await supabase
+
+      // Debug: check auth
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("Gallery auth user:", user?.id || "NOT AUTHENTICATED");
+
+      const { data, error } = await supabase
         .from("saved_headshots")
         .select("id, original_url, preset_id, is_favorite, halo_score, created_at")
         .order("created_at", { ascending: false });
 
-      if (data) {
+      if (error) {
+        console.error("Gallery fetch error:", error);
+      }
+
+      if (data && data.length > 0) {
         setHeadshots(data.map(h => ({
           id: h.id,
           url: h.original_url,
