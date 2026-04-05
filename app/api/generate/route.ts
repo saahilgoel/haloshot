@@ -4,7 +4,9 @@ import { STYLE_PRESETS } from "@/lib/ai/prompts";
 import { FREE_GENERATION_LIMIT, DEFAULT_IMAGES_PER_GENERATION, PRO_IMAGES_PER_GENERATION } from "@/lib/utils/constants";
 import Replicate from "replicate";
 
-const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
+function getReplicate() {
+  return new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +17,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { faceProfileId, presetId, customPrompt, styleOptions } = await req.json();
+    const { faceProfileId, presetId, customPrompt, styleOptions, photoUrls } = await req.json();
 
     // Validate preset
     const preset = STYLE_PRESETS[presetId as keyof typeof STYLE_PRESETS];
@@ -23,49 +25,69 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid preset" }, { status: 400 });
     }
 
-    // Get user profile for subscription check
+    // Ensure profile exists
+    await supabase
+      .from("profiles")
+      .upsert({ id: user.id, email: user.email || "" }, { onConflict: "id", ignoreDuplicates: true });
+
+    // Get user profile
     const { data: profile } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", user.id)
       .single();
 
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-    }
-
-    // Check subscription for non-free presets
-    const isPro = profile.subscription_tier === "pro" || profile.subscription_tier === "team";
-    if (!preset.isFree && !isPro) {
-      return NextResponse.json({ error: "Upgrade to Pro to use this style" }, { status: 403 });
-    }
+    const isPro = profile?.subscription_tier === "pro" || profile?.subscription_tier === "team";
 
     // Check generation limits
-    if (!isPro && profile.generations_count_total >= FREE_GENERATION_LIMIT) {
-      return NextResponse.json({ error: "Free generation limit reached. Upgrade to Pro for unlimited generations." }, { status: 403 });
+    if (!isPro && (profile?.generations_count_total || 0) >= FREE_GENERATION_LIMIT) {
+      return NextResponse.json({ error: "Free generation limit reached." }, { status: 403 });
     }
 
-    // Get face profile
-    const { data: faceProfile } = await supabase
-      .from("face_profiles")
-      .select("*")
-      .eq("id", faceProfileId)
-      .eq("user_id", user.id)
-      .single();
+    // Try to get face profile, but don't block if it doesn't exist
+    let faceProfile = null;
+    let actualFaceProfileId = faceProfileId;
 
-    if (!faceProfile || faceProfile.status !== "ready") {
-      return NextResponse.json({ error: "Face profile not ready" }, { status: 400 });
+    if (faceProfileId && faceProfileId !== "pending") {
+      const { data } = await supabase
+        .from("face_profiles")
+        .select("*")
+        .eq("id", faceProfileId)
+        .eq("user_id", user.id)
+        .single();
+      faceProfile = data;
+    }
+
+    // If no face profile, create one from photoUrls
+    if (!faceProfile && photoUrls?.length) {
+      const { data: newProfile } = await supabase
+        .from("face_profiles")
+        .insert({
+          user_id: user.id,
+          photo_urls: photoUrls,
+          detected_features: {},
+          status: "ready",
+          is_active: true,
+        })
+        .select()
+        .single();
+      faceProfile = newProfile;
+      actualFaceProfileId = newProfile?.id;
+    }
+
+    if (!faceProfile) {
+      return NextResponse.json({ error: "No photos found. Please upload photos first." }, { status: 400 });
     }
 
     const numImages = isPro ? PRO_IMAGES_PER_GENERATION : DEFAULT_IMAGES_PER_GENERATION;
 
-    // Build the prompt
+    // Build prompt
     const subjectDescription = buildSubjectDescription(faceProfile.detected_features);
     let prompt = preset.promptTemplate
       .replace("{subject_description}", subjectDescription)
       .replace("{background}", styleOptions?.background || preset.styleConfig.backgrounds[0])
       .replace("{outfit}", styleOptions?.outfit || preset.styleConfig.outfits[0])
-      .replace("{lighting}", styleOptions?.lighting || preset.styleConfig.lighting?.[0] || "soft studio");
+      .replace("{lighting}", styleOptions?.lighting || "soft studio");
 
     if (customPrompt) {
       prompt += ` Additional details: ${customPrompt}`;
@@ -76,35 +98,36 @@ export async function POST(req: NextRequest) {
       .from("generation_jobs")
       .insert({
         user_id: user.id,
-        face_profile_id: faceProfileId,
+        face_profile_id: actualFaceProfileId,
         preset_id: presetId,
         custom_prompt: customPrompt || null,
         style_options: styleOptions || {},
-        num_images: numImages,
-        status: "queued",
+        num_images: Math.min(numImages, 4),
+        status: "processing",
       })
       .select()
       .single();
 
     if (jobError || !job) {
+      console.error("Job creation error:", jobError);
       return NextResponse.json({ error: "Failed to create generation job" }, { status: 500 });
     }
 
     // Start Replicate prediction
     try {
+      const replicate = getReplicate();
       const prediction = await replicate.predictions.create({
         model: "black-forest-labs/flux-dev",
         input: {
           prompt,
-          negative_prompt: preset.negativePrompt,
-          num_outputs: Math.min(numImages, 4), // Flux does max 4 per batch
-          guidance_scale: 3.5,
+          num_outputs: Math.min(numImages, 4),
+          guidance: 3.5,
           num_inference_steps: 28,
           output_format: "webp",
           output_quality: 90,
         },
         webhook: `${process.env.NEXT_PUBLIC_APP_URL}/api/generate/webhook`,
-        webhook_events_filter: ["completed", "output"],
+        webhook_events_filter: ["completed"],
       });
 
       // Update job with prediction ID
@@ -112,19 +135,21 @@ export async function POST(req: NextRequest) {
         .from("generation_jobs")
         .update({
           replicate_prediction_id: prediction.id,
-          status: "processing",
           model_version: "flux-dev",
         })
         .eq("id", job.id);
 
       return NextResponse.json({ jobId: job.id, predictionId: prediction.id });
-    } catch (replicateError) {
+    } catch (replicateError: unknown) {
+      console.error("Replicate error:", replicateError);
+      const errorMsg = replicateError instanceof Error ? replicateError.message : "Unknown error";
+
       await supabase
         .from("generation_jobs")
-        .update({ status: "failed", error_message: "Failed to start AI generation" })
+        .update({ status: "failed", error_message: errorMsg })
         .eq("id", job.id);
 
-      return NextResponse.json({ error: "Failed to start generation" }, { status: 500 });
+      return NextResponse.json({ error: `Generation failed: ${errorMsg}` }, { status: 500 });
     }
   } catch (error) {
     console.error("Generation error:", error);

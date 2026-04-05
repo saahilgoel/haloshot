@@ -63,6 +63,7 @@ export default function GeneratePage() {
     await startGeneration({
       faceProfileId,
       presetId: selectedPreset,
+      photoUrls: uploadedUrls,
     });
   };
 

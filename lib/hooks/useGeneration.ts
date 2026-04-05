@@ -26,6 +26,7 @@ export function useGeneration() {
     presetId: string;
     customPrompt?: string;
     styleOptions?: Record<string, string>;
+    photoUrls?: string[];
   }) => {
     setIsGenerating(true);
     setError(null);
