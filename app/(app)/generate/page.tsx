@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, Zap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UploadZone } from "@/components/app/UploadZone";
 import { PresetPicker } from "@/components/app/PresetPicker";
@@ -21,6 +21,7 @@ export default function GeneratePage() {
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
   const [faceProfileId, setFaceProfileId] = useState<string | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+  const [model, setModel] = useState<"studio" | "quick">("studio");
   const [showPaywall, setShowPaywall] = useState(false);
 
   // TODO: Replace with real user data from useUser/useSubscription hooks
@@ -64,6 +65,7 @@ export default function GeneratePage() {
       faceProfileId,
       presetId: selectedPreset,
       photoUrls: uploadedUrls,
+      model,
     });
   };
 
@@ -184,6 +186,59 @@ export default function GeneratePage() {
                 isPro={isPro}
               />
 
+              {/* Model Picker */}
+              {selectedPreset && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-3"
+                >
+                  <h2 className="text-sm font-medium text-white/60 uppercase tracking-wider">Choose your engine</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setModel("studio")}
+                      className={cn(
+                        "relative rounded-2xl border-2 p-4 text-left transition-all",
+                        model === "studio"
+                          ? "border-amber-500/70 bg-amber-500/10"
+                          : "border-white/10 bg-white/5 hover:border-white/20"
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="h-5 w-5 text-amber-400" />
+                        <span className="font-semibold text-white text-sm">Studio Quality</span>
+                      </div>
+                      <p className="text-xs text-white/50 leading-relaxed">
+                        2K resolution. Best identity match. Takes 45-60s per shot.
+                      </p>
+                      {model === "studio" && (
+                        <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-amber-400" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setModel("quick")}
+                      className={cn(
+                        "relative rounded-2xl border-2 p-4 text-left transition-all",
+                        model === "quick"
+                          ? "border-violet-500/70 bg-violet-500/10"
+                          : "border-white/10 bg-white/5 hover:border-white/20"
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Zap className="h-5 w-5 text-violet-400" />
+                        <span className="font-semibold text-white text-sm">Quick Shot</span>
+                      </div>
+                      <p className="text-xs text-white/50 leading-relaxed">
+                        Fast results in ~5 seconds. Good for previewing styles.
+                      </p>
+                      {model === "quick" && (
+                        <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-violet-400" />
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
               {selectedPreset && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -210,12 +265,44 @@ export default function GeneratePage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
+              className="space-y-6"
             >
               <GenerationProgress
                 status={job?.status || "queued"}
                 presetName={selectedPresetData?.name || ""}
-                numImages={job?.numImages || 8}
+                numImages={job?.numImages || 4}
+                modelName={model}
+                completedCount={generatedImages.length}
               />
+
+              {/* Show images as they arrive */}
+              {generatedImages.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-3"
+                >
+                  <div className="flex items-center gap-2 text-sm text-white/60">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>{generatedImages.length} of {job?.numImages || 4} headshots ready...</span>
+                  </div>
+                  <HeadshotGrid
+                    images={generatedImages}
+                    similarityScores={similarityScores}
+                    isFreeUser={!isPro}
+                    onDownload={(url) => {
+                      if (!isPro) {
+                        setShowPaywall(true);
+                      } else {
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "haloshot-headshot.jpg";
+                        a.click();
+                      }
+                    }}
+                  />
+                </motion.div>
+              )}
             </motion.div>
           )}
 
@@ -231,7 +318,9 @@ export default function GeneratePage() {
               <div>
                 <h1 className="text-2xl font-display font-bold text-white">Your glow-up is ready.</h1>
                 <p className="text-white/50 mt-1">
-                  The halo effect starts now. {generatedImages.length} headshots generated.
+                  {generatedImages.length} of {job?.numImages || generatedImages.length} headshots generated
+                  {" with "}
+                  {model === "studio" ? "Studio Quality" : "Quick Shot"}.
                   {!isPro && " Upgrade for watermark-free downloads."}
                 </p>
               </div>
@@ -244,7 +333,6 @@ export default function GeneratePage() {
                   if (!isPro) {
                     setShowPaywall(true);
                   } else {
-                    // Trigger download
                     const a = document.createElement("a");
                     a.href = url;
                     a.download = "haloshot-headshot.jpg";
@@ -262,7 +350,16 @@ export default function GeneratePage() {
                   }}
                   className="flex-1"
                 >
-                  Try Another Style
+                  Try Different Style
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
+                  className="flex-1"
+                >
+                  <Sparkles className="h-4 w-4 mr-1" />
+                  Generate More
                 </Button>
                 <Button
                   onClick={() => window.location.href = "/gallery"}

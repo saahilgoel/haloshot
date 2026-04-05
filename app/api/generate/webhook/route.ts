@@ -25,8 +25,19 @@ export async function POST(req: NextRequest) {
     }
 
     if (status === "succeeded" && output) {
-      // Get the output URL
-      const imageUrl = typeof output === "string" ? output : Array.isArray(output) ? String(output[0]) : String(output);
+      // Handle both model outputs:
+      // - Nano Banana 2 returns a single URL string
+      // - Kontext Pro returns a FileOutput (string URL) or array
+      let imageUrl: string;
+      if (typeof output === "string") {
+        imageUrl = output;
+      } else if (Array.isArray(output)) {
+        imageUrl = String(output[0]);
+      } else if (typeof output === "object" && output !== null && "url" in output) {
+        imageUrl = String((output as { url: string }).url);
+      } else {
+        imageUrl = String(output);
+      }
 
       // Append to existing generated images
       const existingUrls = job.generated_image_urls || [];

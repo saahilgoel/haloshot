@@ -27,6 +27,7 @@ export function useGeneration() {
     customPrompt?: string;
     styleOptions?: Record<string, string>;
     photoUrls?: string[];
+    model?: "studio" | "quick";
   }) => {
     setIsGenerating(true);
     setError(null);
