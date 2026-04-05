@@ -66,7 +66,7 @@ export function HeadshotGrid({
               {/* Watermark for free users */}
               {isFreeUser && (
                 <div className="absolute bottom-2 right-2 text-[10px] text-white/30 font-medium tracking-wider">
-                  HEADSHIFT
+                  HALOSHOT
                 </div>
               )}
 

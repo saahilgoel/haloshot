@@ -47,9 +47,18 @@ export async function POST(req: NextRequest) {
         })
         .eq("id", job.id);
 
+      // Save each new image to gallery
+      await supabase.from("saved_headshots").insert({
+        user_id: job.user_id,
+        generation_job_id: job.id,
+        original_url: imageUrl,
+        thumbnail_url: imageUrl,
+        preset_id: job.preset_id,
+        resolution: "1024x1024",
+      });
+
       // If all done, update user generation count
       if (allDone) {
-        // Update generation count
         const { data: userProfile } = await supabase
           .from("profiles")
           .select("generations_count_total")
