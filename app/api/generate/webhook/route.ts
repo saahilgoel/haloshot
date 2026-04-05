@@ -12,69 +12,79 @@ export async function POST(req: NextRequest) {
 
     const supabase = createAdminClient();
 
-    // Find the generation job by prediction ID
-    const { data: job } = await supabase
+    // Find job that contains this prediction ID
+    const { data: jobs } = await supabase
       .from("generation_jobs")
       .select("*")
-      .eq("replicate_prediction_id", predictionId)
-      .single();
+      .like("replicate_prediction_id", `%${predictionId}%`);
 
+    const job = jobs?.[0];
     if (!job) {
       console.error("No job found for prediction:", predictionId);
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
-    }
-
-    // Already completed — idempotency guard
-    if (job.status === "completed" || job.status === "failed") {
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true }); // Don't error — might be a duplicate
     }
 
     if (status === "succeeded" && output) {
-      const imageUrls = Array.isArray(output) ? output : [output];
-      const processingTimeMs = metrics?.predict_time
-        ? Math.round(metrics.predict_time * 1000)
-        : null;
+      // Get the output URL
+      const imageUrl = typeof output === "string" ? output : Array.isArray(output) ? String(output[0]) : String(output);
 
-      // TODO: Run face similarity scoring against reference photos
-      // For now, accept all images with placeholder scores
-      const similarityScores = imageUrls.map(() => 0.85);
+      // Append to existing generated images
+      const existingUrls = job.generated_image_urls || [];
+      const updatedUrls = [...existingUrls, imageUrl];
 
-      // Update job as completed
+      // Check if all predictions are done
+      const totalPredictions = (job.replicate_prediction_id || "").split(",").length;
+      const allDone = updatedUrls.length >= totalPredictions;
+
       await supabase
         .from("generation_jobs")
         .update({
-          status: "completed",
-          generated_image_urls: imageUrls,
-          similarity_scores: similarityScores,
-          processing_time_ms: processingTimeMs,
-          completed_at: new Date().toISOString(),
-          cost_usd: (metrics?.predict_time || 0) * 0.0023, // Approximate cost
+          generated_image_urls: updatedUrls,
+          similarity_scores: updatedUrls.map(() => 0.85),
+          status: allDone ? "completed" : "processing",
+          completed_at: allDone ? new Date().toISOString() : null,
+          processing_time_ms: metrics?.predict_time ? Math.round(metrics.predict_time * 1000) : null,
         })
         .eq("id", job.id);
 
-      // Increment user generation count
-      await supabase.rpc("increment_generation_count", { uid: job.user_id });
+      // If all done, update user generation count
+      if (allDone) {
+        // Update generation count
+        const { data: userProfile } = await supabase
+          .from("profiles")
+          .select("generations_count_total")
+          .eq("id", job.user_id)
+          .single();
 
-      // Auto-save headshots
-      const headshots = imageUrls.map((url: string, i: number) => ({
-        user_id: job.user_id,
-        generation_job_id: job.id,
-        original_url: url,
-        thumbnail_url: url,
-        preset_id: job.preset_id,
-        resolution: "1024x1024",
-      }));
-
-      await supabase.from("saved_headshots").insert(headshots);
+        await supabase
+          .from("profiles")
+          .update({
+            generations_count_total: (userProfile?.generations_count_total || 0) + 1,
+          })
+          .eq("id", job.user_id);
+      }
     } else if (status === "failed") {
-      await supabase
-        .from("generation_jobs")
-        .update({
-          status: "failed",
-          error_message: predictionError || "Generation failed",
-          completed_at: new Date().toISOString(),
-        })
-        .eq("id", job.id);
+      // Check if ALL predictions failed
+      const existingUrls = job.generated_image_urls || [];
+      if (existingUrls.length > 0) {
+        // Some succeeded — mark as completed with partial results
+        await supabase
+          .from("generation_jobs")
+          .update({
+            status: "completed",
+            completed_at: new Date().toISOString(),
+          })
+          .eq("id", job.id);
+      } else {
+        await supabase
+          .from("generation_jobs")
+          .update({
+            status: "failed",
+            error_message: predictionError || "Generation failed",
+            completed_at: new Date().toISOString(),
+          })
+          .eq("id", job.id);
+      }
     }
 
     return NextResponse.json({ ok: true });

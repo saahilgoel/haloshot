@@ -2,14 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { STYLE_PRESETS } from "@/lib/ai/prompts";
 import { FREE_GENERATION_LIMIT, DEFAULT_IMAGES_PER_GENERATION, PRO_IMAGES_PER_GENERATION } from "@/lib/utils/constants";
-import Replicate from "replicate";
-
-// Allow up to 120 seconds for AI generation
-export const maxDuration = 120;
-
-function getReplicate() {
-  return new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,12 +34,11 @@ export async function POST(req: NextRequest) {
 
     const isPro = profile?.subscription_tier === "pro" || profile?.subscription_tier === "team";
 
-    // Check generation limits
     if (!isPro && (profile?.generations_count_total || 0) >= FREE_GENERATION_LIMIT) {
       return NextResponse.json({ error: "Free generation limit reached." }, { status: 403 });
     }
 
-    // Try to get face profile, but don't block if it doesn't exist
+    // Get or create face profile
     let faceProfile = null;
     let actualFaceProfileId = faceProfileId;
 
@@ -61,7 +52,6 @@ export async function POST(req: NextRequest) {
       faceProfile = data;
     }
 
-    // If no face profile, create one from photoUrls
     if (!faceProfile && photoUrls?.length) {
       const { data: newProfile } = await supabase
         .from("face_profiles")
@@ -82,7 +72,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No photos found. Please upload photos first." }, { status: 400 });
     }
 
+    const referencePhotoUrl = faceProfile.photo_urls?.[0];
+    if (!referencePhotoUrl) {
+      return NextResponse.json({ error: "No reference photo found" }, { status: 400 });
+    }
+
     const numImages = isPro ? PRO_IMAGES_PER_GENERATION : DEFAULT_IMAGES_PER_GENERATION;
+    const batchSize = Math.min(numImages, 4);
 
     // Build prompt
     const subjectDescription = buildSubjectDescription(faceProfile.detected_features);
@@ -105,7 +101,7 @@ export async function POST(req: NextRequest) {
         preset_id: presetId,
         custom_prompt: customPrompt || null,
         style_options: styleOptions || {},
-        num_images: Math.min(numImages, 4),
+        num_images: batchSize,
         status: "processing",
       })
       .select()
@@ -116,52 +112,64 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to create generation job" }, { status: 500 });
     }
 
-    // Run Replicate generation with Flux Kontext (identity-preserving)
+    // Fire off async predictions with webhooks — returns IMMEDIATELY
+    const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/generate/webhook`;
+
     try {
-      const replicate = getReplicate();
-      const referencePhotoUrl = faceProfile.photo_urls?.[0];
+      const predictionIds: string[] = [];
 
-      if (!referencePhotoUrl) {
-        return NextResponse.json({ error: "No reference photo found" }, { status: 400 });
-      }
-
-      // Generate multiple images by running Kontext multiple times
-      const batchSize = Math.min(numImages, 4);
-      const imageUrls: string[] = [];
-
-      const promises = Array.from({ length: batchSize }, (_, i) =>
-        replicate.run("black-forest-labs/flux-kontext-dev", {
-          input: {
-            prompt: `${prompt} Variation ${i + 1}, unique pose and expression.`,
-            input_image: referencePhotoUrl,
-            aspect_ratio: "3:4",
-            guidance: 3.5,
-            num_inference_steps: 28,
-            output_format: "webp",
-            output_quality: 90,
-            seed: Math.floor(Math.random() * 1000000) + i * 1000,
+      for (let i = 0; i < batchSize; i++) {
+        const res = await fetch("https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-dev/predictions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${process.env.REPLICATE_API_TOKEN}`,
+            "Content-Type": "application/json",
           },
-        })
-      );
+          body: JSON.stringify({
+            input: {
+              prompt: `${prompt} Variation ${i + 1}, unique pose and expression.`,
+              input_image: referencePhotoUrl,
+              aspect_ratio: "3:4",
+              guidance: 3.5,
+              num_inference_steps: 28,
+              output_format: "webp",
+              output_quality: 90,
+              seed: Math.floor(Math.random() * 1000000) + i * 1000,
+            },
+            webhook: webhookUrl,
+            webhook_events_filter: ["completed"],
+          }),
+        });
 
-      const results = await Promise.all(promises);
-      for (const output of results) {
-        imageUrls.push(String(output));
+        if (!res.ok) {
+          const errBody = await res.text();
+          console.error(`Replicate prediction ${i} failed:`, errBody);
+          continue;
+        }
+
+        const prediction = await res.json();
+        predictionIds.push(prediction.id);
       }
 
-      // Update job as completed
+      if (predictionIds.length === 0) {
+        await supabase
+          .from("generation_jobs")
+          .update({ status: "failed", error_message: "Failed to start any predictions" })
+          .eq("id", job.id);
+        return NextResponse.json({ error: "Failed to start generation" }, { status: 500 });
+      }
+
+      // Store prediction IDs in the job
       await supabase
         .from("generation_jobs")
         .update({
-          status: "completed",
-          generated_image_urls: imageUrls,
-          similarity_scores: imageUrls.map(() => 0.85),
-          model_version: "flux-dev",
-          completed_at: new Date().toISOString(),
+          replicate_prediction_id: predictionIds.join(","),
+          model_version: "flux-kontext-dev",
         })
         .eq("id", job.id);
 
-      return NextResponse.json({ jobId: job.id, status: "completed", imageUrls });
+      // Return immediately — webhook will update the job when images are ready
+      return NextResponse.json({ jobId: job.id, predictions: predictionIds.length });
     } catch (replicateError: unknown) {
       console.error("Replicate error:", replicateError);
       const errorMsg = replicateError instanceof Error ? replicateError.message : "Unknown error";
