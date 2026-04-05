@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-02-24.acacia",
-});
+function getStripeClient() { return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-02-24.acacia", }); }
+
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(
+    event = getStripeClient().webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.subscription
-          ? (await stripe.subscriptions.retrieve(session.subscription as string)).metadata.supabase_user_id
+          ? (await getStripeClient().subscriptions.retrieve(session.subscription as string)).metadata.supabase_user_id
           : null;
 
         if (userId) {
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
         if (invoice.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+          const subscription = await getStripeClient().subscriptions.retrieve(invoice.subscription as string);
           const userId = subscription.metadata.supabase_user_id;
 
           if (userId) {
