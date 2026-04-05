@@ -36,6 +36,7 @@ export const metadata: Metadata = {
     description:
       "AI headshots that exploit the halo effect. Score your current photo, get a glow-up in 60 seconds. The science of first impressions, perfected.",
   },
+  icons: { icon: "/favicon.svg" },
 };
 
 export default function RootLayout({
@@ -47,6 +48,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${spaceGrotesk.variable} ${dmSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"

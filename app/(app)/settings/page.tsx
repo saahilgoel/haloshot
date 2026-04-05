@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Moon, Sun, Upload, Trash2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
@@ -71,7 +71,10 @@ function Switch({
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
+  const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
+
+  useEffect(() => setMounted(true), []);
 
   const settingsTabs = [
     { id: "profile", label: "Profile" },
@@ -172,7 +175,7 @@ export default function SettingsPage() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {theme === "dark" ? (
+                  {mounted && theme === "dark" ? (
                     <Moon className="h-5 w-5 text-violet-400" />
                   ) : (
                     <Sun className="h-5 w-5 text-amber-400" />
@@ -180,14 +183,16 @@ export default function SettingsPage() {
                   <div>
                     <p className="text-sm font-medium">Dark mode</p>
                     <p className="text-xs text-muted-foreground">
-                      {theme === "dark"
-                        ? "Currently using dark theme"
-                        : "Currently using light theme"}
+                      {mounted
+                        ? theme === "dark"
+                          ? "Currently using dark theme"
+                          : "Currently using light theme"
+                        : "\u00A0"}
                     </p>
                   </div>
                 </div>
                 <Switch
-                  checked={theme === "dark"}
+                  checked={mounted ? theme === "dark" : false}
                   onCheckedChange={(dark) =>
                     setTheme(dark ? "dark" : "light")
                   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, Menu, X, Moon, Sun } from "lucide-react";
@@ -33,7 +33,10 @@ export function Header() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const title = getPageTitle(pathname);
+
+  useEffect(() => setMounted(true), []);
 
   return (
     <>
@@ -59,10 +62,14 @@ export function Header() {
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
-            {theme === "dark" ? (
-              <Sun className="h-4 w-4" />
+            {mounted ? (
+              theme === "dark" ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )
             ) : (
-              <Moon className="h-4 w-4" />
+              <span className="h-4 w-4" />
             )}
           </button>
           <button className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground">

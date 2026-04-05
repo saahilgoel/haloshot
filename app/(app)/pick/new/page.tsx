@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Copy,
@@ -51,11 +51,13 @@ export default function NewPollPage() {
   const [pollSlug, setPollSlug] = useState("");
   const [copied, setCopied] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [origin, setOrigin] = useState("");
 
-  const pollUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/pick/${pollSlug}`
-      : "";
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const pollUrl = pollSlug ? `${origin}/pick/${pollSlug}` : "";
 
   const createPoll = async () => {
     if (!selectedPair) return;

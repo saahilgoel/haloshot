@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -21,11 +21,7 @@ interface VotePageProps {
   onVote?: (photoId: string) => void;
 }
 
-function ConfettiParticle({ delay }: { delay: number }) {
-  const colors = ["#6C3CE0", "#C5F536", "#F5A623", "#fff"];
-  const color = colors[Math.floor(Math.random() * colors.length)];
-  const x = Math.random() * 200 - 100;
-  const rotation = Math.random() * 720 - 360;
+function ConfettiParticle({ delay, color, x, rotation }: { delay: number; color: string; x: number; rotation: number }) {
 
   return (
     <motion.div
@@ -54,6 +50,15 @@ export function VotePage({
   const [voted, setVoted] = useState<string | null>(null);
   const [votes, setVotes] = useState(initialVotes);
   const [showConfetti, setShowConfetti] = useState(false);
+
+  const confettiPieces = useMemo(() => {
+    const colors = ["#6C3CE0", "#C5F536", "#F5A623", "#fff"];
+    return Array.from({ length: 40 }).map((_, i) => ({
+      color: colors[Math.floor(Math.random() * colors.length)],
+      x: Math.random() * 200 - 100,
+      rotation: Math.random() * 720 - 360,
+    }));
+  }, []);
 
   const total = votes.a + votes.b;
   const pctA = total > 0 ? Math.round((votes.a / total) * 100) : 50;
@@ -84,8 +89,8 @@ export function VotePage({
       <AnimatePresence>
         {showConfetti && (
           <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
-            {Array.from({ length: 40 }).map((_, i) => (
-              <ConfettiParticle key={i} delay={i * 0.04} />
+            {confettiPieces.map((piece, i) => (
+              <ConfettiParticle key={i} delay={i * 0.04} color={piece.color} x={piece.x} rotation={piece.rotation} />
             ))}
           </div>
         )}
