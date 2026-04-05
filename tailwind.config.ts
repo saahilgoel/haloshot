@@ -91,7 +91,7 @@ const config: Config = {
       fontFamily: {
         display: ["var(--font-cabinet)", "system-ui", "sans-serif"],
         sans: ["var(--font-general)", "system-ui", "sans-serif"],
-        mono: ["var(--font-jetbrains)", "monospace"],
+        mono: ["var(--font-mono)", "monospace"],
       },
       borderRadius: {
         lg: "var(--radius)",

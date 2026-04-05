@@ -123,8 +123,8 @@ export default function GeneratePage() {
               className="space-y-6"
             >
               <div>
-                <h1 className="text-2xl font-display font-bold text-white">Upload your selfies</h1>
-                <p className="text-white/50 mt-1">We need 1-5 clear photos of your face. Better photos = better headshots.</p>
+                <h1 className="text-2xl font-display font-bold text-white">Let&apos;s see the real you.</h1>
+                <p className="text-white/50 mt-1">3 selfies. Different angles. Good lighting. No filters — the AI needs your actual face, not the Instagram version.</p>
               </div>
 
               <UsageIndicator tier={tier} generationsUsed={generationsUsed} />
@@ -137,7 +137,7 @@ export default function GeneratePage() {
                     onClick={() => setStep("style")}
                     className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-base font-medium gap-2"
                   >
-                    Choose Your Style
+                    Pick Your First Impression
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </motion.div>
@@ -165,8 +165,8 @@ export default function GeneratePage() {
                   Back
                 </Button>
                 <div>
-                  <h1 className="text-2xl font-display font-bold text-white">Choose your style</h1>
-                  <p className="text-white/50 mt-1">Pick a look that matches your vibe.</p>
+                  <h1 className="text-2xl font-display font-bold text-white">What should your first impression say?</h1>
+                  <p className="text-white/50 mt-1">Pick a look. Each one is optimized for different perception dimensions.</p>
                 </div>
               </div>
 
@@ -188,7 +188,7 @@ export default function GeneratePage() {
                     className="w-full h-14 bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-base font-semibold gap-2 rounded-2xl shadow-lg shadow-violet-500/25"
                   >
                     <Sparkles className="h-5 w-5" />
-                    Generate {selectedPresetData?.name} Headshots
+                    Start My Glow-Up
                   </Button>
                 </motion.div>
               )}
@@ -221,10 +221,10 @@ export default function GeneratePage() {
               className="space-y-6"
             >
               <div>
-                <h1 className="text-2xl font-display font-bold text-white">Your headshots</h1>
+                <h1 className="text-2xl font-display font-bold text-white">Your glow-up is ready.</h1>
                 <p className="text-white/50 mt-1">
-                  {generatedImages.length} headshots generated.
-                  {!isPro && " Upgrade to Pro to download without watermark."}
+                  The halo effect starts now. {generatedImages.length} headshots generated.
+                  {!isPro && " Upgrade for watermark-free downloads."}
                 </p>
               </div>
 

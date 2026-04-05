@@ -84,7 +84,7 @@ export default function DashboardPage() {
           {getGreeting()}, {mockUser.name}
         </h1>
         <p className="mt-1 text-white/40">
-          Your first impression at a glance.
+          Here&apos;s how your first impression is performing.
         </p>
       </motion.div>
 
@@ -169,13 +169,13 @@ export default function DashboardPage() {
       <div className="grid grid-cols-3 gap-4">
         {[
           {
-            label: "Total Headshots",
+            label: "Shots Generated",
             value: mockStats.totalHeadshots,
             icon: ImageIcon,
             color: "text-violet-400",
           },
           {
-            label: "Best Halo Score",
+            label: "Peak Halo Score",
             value: mockStats.bestHaloScore,
             icon: Trophy,
             color: "text-halo",
@@ -216,14 +216,14 @@ export default function DashboardPage() {
 
       {/* Quick Glow-Up CTA */}
       <motion.div custom={4} initial="hidden" animate="visible" variants={stagger}>
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-violet-600 via-violet-700 to-violet-900">
+        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-violet-600 via-violet-700 to-violet-900 halo-glow-sm">
           {/* Golden glow accent */}
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-halo/15 blur-2xl" />
           <div className="absolute -bottom-4 -left-4 h-24 w-24 rounded-full bg-halo/10 blur-2xl" />
 
           <CardContent className="relative flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-2">
-              <h2 className="font-display text-xl font-bold text-white">
+              <h2 className="font-display text-xl font-bold text-gradient-halo">
                 Quick Glow-Up
               </h2>
               <p className="text-sm text-violet-200">
@@ -402,7 +402,7 @@ export default function DashboardPage() {
                 Your gallery is empty.
               </h3>
               <p className="mb-6 max-w-sm text-sm text-white/40">
-                Your first impression shouldn&apos;t be.
+                Your first impression shouldn&apos;t be. Time to fix that.
               </p>
               <Button
                 asChild

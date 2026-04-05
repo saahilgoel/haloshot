@@ -84,7 +84,7 @@ export default function SettingsPage() {
       <div>
         <h1 className="font-display text-2xl font-bold">Settings</h1>
         <p className="mt-1 text-muted-foreground">
-          Manage your account preferences.
+          Fine-tune your HaloShot experience.
         </p>
       </div>
 
@@ -97,7 +97,7 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>Profile Photo</CardTitle>
               <CardDescription>
-                This is displayed on your account and shared headshots.
+                The face behind the halo. Shown on your account and shared headshots.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex items-center gap-6">
@@ -166,7 +166,7 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>Theme</CardTitle>
               <CardDescription>
-                Choose how HaloShot looks for you.
+                Dark mode is where the halo shines brightest.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -221,7 +221,7 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>Download Your Data</CardTitle>
               <CardDescription>
-                Get a copy of all your data including headshots and account info.
+                Take your glow-up with you. Get a copy of all your data including headshots and account info.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -235,7 +235,7 @@ export default function SettingsPage() {
                 Delete Account
               </CardTitle>
               <CardDescription>
-                Permanently delete your account and all associated data. This
+                Permanently delete your account and all associated data. Your halo disappears forever. This
                 action cannot be undone.
               </CardDescription>
             </CardHeader>

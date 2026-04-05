@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { Inter, Sora, JetBrains_Mono } from "next/font/google";
+import { Space_Grotesk, DM_Sans, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
-const inter = Inter({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-cabinet",
 });
 
-const sora = Sora({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-display",
+  variable: "--font-general",
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -46,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${sora.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${spaceGrotesk.variable} ${dmSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <ThemeProvider
           attribute="class"

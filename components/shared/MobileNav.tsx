@@ -39,10 +39,10 @@ export function MobileNav() {
               >
                 <div
                   className={cn(
-                    "flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95",
+                    "flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95 halo-glow",
                     isActive
-                      ? "bg-lime-400 text-black shadow-lime-400/25"
-                      : "bg-lime-400/90 text-black"
+                      ? "bg-gradient-to-br from-amber-400 to-amber-600 text-black"
+                      : "bg-gradient-to-br from-amber-400/90 to-amber-600/90 text-black"
                   )}
                 >
                   <Icon className="h-5 w-5" strokeWidth={2.5} />
@@ -50,7 +50,7 @@ export function MobileNav() {
                 <span
                   className={cn(
                     "mt-1 text-[10px] font-medium",
-                    isActive ? "text-lime-400" : "text-muted-foreground"
+                    isActive ? "text-amber-400" : "text-muted-foreground"
                   )}
                 >
                   {tab.label}

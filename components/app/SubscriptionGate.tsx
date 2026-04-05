@@ -16,24 +16,24 @@ interface SubscriptionGateProps {
 
 const triggerMessages: Record<string, { title: string; subtitle: string }> = {
   generation_limit: {
-    title: "You've used all 3 free headshots",
-    subtitle: "Upgrade to Pro for unlimited AI headshots",
+    title: "You\u2019ve used your 3 reality checks.",
+    subtitle: "Your best first impression is behind this button. $9.99/month. Cancel anytime.",
   },
   premium_preset: {
-    title: "This style requires Pro",
-    subtitle: "Unlock all 8 professional styles with Pro",
+    title: "That look is part of the Glow-Up.",
+    subtitle: "Unlock every style. Every perception dimension. No limits.",
   },
   download_4k: {
-    title: "4K downloads are a Pro feature",
-    subtitle: "Upgrade for crystal-clear, print-ready headshots",
+    title: "Print-ready needs the Glow-Up.",
+    subtitle: "4K downloads. Crystal clear. Zero compromise.",
   },
   no_watermark: {
-    title: "Remove watermarks with Pro",
-    subtitle: "Get clean, professional headshots without branding",
+    title: "Watermarks kill first impressions.",
+    subtitle: "Get clean, professional headshots that actually work for you.",
   },
   editor: {
-    title: "The editor is a Pro feature",
-    subtitle: "Swap backgrounds, change outfits, and more",
+    title: "The editor is a Glow-Up feature.",
+    subtitle: "Swap backgrounds, change outfits, fine-tune your halo.",
   },
 };
 
@@ -158,7 +158,7 @@ export function SubscriptionGate({ isOpen, onClose, trigger = "generation_limit"
                 className="w-full h-12 bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-base font-semibold"
               >
                 <Zap className="h-4 w-4 mr-2" />
-                Start 7-Day Free Trial
+                Get the Glow-Up
               </Button>
 
               <p className="text-center text-xs text-white/30 mt-3">

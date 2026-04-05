@@ -52,21 +52,22 @@ export function Sidebar() {
   const isTeamPlan = mockUser.plan === "team";
 
   const tierLabel: Record<string, string> = {
-    free: "Free",
-    pro: "Pro",
+    free: "The Reality Check",
+    pro: "The Glow-Up",
     team: "Team",
   };
 
   return (
     <div
       className={cn(
-        "relative flex h-full flex-col border-r border-border bg-card transition-all duration-200",
+        "relative flex h-full flex-col border-r border-border transition-all duration-200",
         collapsed ? "w-[68px]" : "w-[240px]"
       )}
+      style={{ backgroundColor: "#1A1A24" }}
     >
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 px-4">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500 font-display text-sm font-bold text-white">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 font-display text-sm font-bold text-black halo-glow-sm">
           H
         </div>
         {!collapsed && (
@@ -91,9 +92,9 @@ export function Sidebar() {
       {/* Plan badge */}
       {!collapsed && (
         <div className="mx-4 mb-4">
-          <div className="flex items-center gap-1.5 rounded-md bg-violet-500/10 px-2.5 py-1.5 text-xs font-medium text-violet-400">
+          <div className="flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2.5 py-1.5 text-xs font-medium text-amber-400">
             <Crown className="h-3.5 w-3.5" />
-            {tierLabel[mockUser.plan]} Plan
+            {tierLabel[mockUser.plan]}
           </div>
         </div>
       )}
@@ -121,7 +122,7 @@ export function Sidebar() {
               <Icon
                 className={cn(
                   "h-[18px] w-[18px] shrink-0",
-                  item.accent && !isActive && "text-lime-400",
+                  item.accent && !isActive && "text-amber-400",
                   isActive && "text-violet-400"
                 )}
               />
@@ -129,7 +130,7 @@ export function Sidebar() {
                 <span>
                   {item.label}
                   {item.accent && (
-                    <span className="ml-1.5 inline-flex h-1.5 w-1.5 rounded-full bg-lime-400" />
+                    <span className="ml-1.5 inline-flex h-1.5 w-1.5 rounded-full bg-amber-400" />
                   )}
                 </span>
               )}

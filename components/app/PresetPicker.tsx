@@ -89,8 +89,13 @@ export function PresetPicker({ selectedPreset, onSelect, isPro }: PresetPickerPr
               <h3 className="font-display text-sm font-semibold text-white mb-1">
                 {preset.name}
               </h3>
-              <p className="text-xs text-white/50 line-clamp-2 leading-relaxed">
+              <p className="text-xs text-white/50 line-clamp-2 leading-relaxed mb-2">
                 {preset.description}
+              </p>
+
+              {/* Halo pitch */}
+              <p className="text-[10px] text-amber-400/70 leading-snug line-clamp-2">
+                {preset.haloPitch}
               </p>
 
               {/* Style options preview */}
