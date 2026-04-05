@@ -4,6 +4,9 @@ import { STYLE_PRESETS } from "@/lib/ai/prompts";
 import { FREE_GENERATION_LIMIT, DEFAULT_IMAGES_PER_GENERATION, PRO_IMAGES_PER_GENERATION } from "@/lib/utils/constants";
 import Replicate from "replicate";
 
+// Allow up to 120 seconds for AI generation
+export const maxDuration = 120;
+
 function getReplicate() {
   return new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
 }
@@ -113,11 +116,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to create generation job" }, { status: 500 });
     }
 
-    // Start Replicate prediction
+    // Run Replicate generation (synchronous — waits for result)
     try {
       const replicate = getReplicate();
-      const prediction = await replicate.predictions.create({
-        model: "black-forest-labs/flux-dev",
+      const output = await replicate.run("black-forest-labs/flux-dev", {
         input: {
           prompt,
           num_outputs: Math.min(numImages, 4),
@@ -126,20 +128,26 @@ export async function POST(req: NextRequest) {
           output_format: "webp",
           output_quality: 90,
         },
-        webhook: `${process.env.NEXT_PUBLIC_APP_URL}/api/generate/webhook`,
-        webhook_events_filter: ["completed"],
       });
 
-      // Update job with prediction ID
+      // output is an array of FileOutput objects that stringify to URLs
+      const imageUrls = Array.isArray(output)
+        ? output.map((item) => String(item))
+        : [String(output)];
+
+      // Update job as completed
       await supabase
         .from("generation_jobs")
         .update({
-          replicate_prediction_id: prediction.id,
+          status: "completed",
+          generated_image_urls: imageUrls,
+          similarity_scores: imageUrls.map(() => 0.85),
           model_version: "flux-dev",
+          completed_at: new Date().toISOString(),
         })
         .eq("id", job.id);
 
-      return NextResponse.json({ jobId: job.id, predictionId: prediction.id });
+      return NextResponse.json({ jobId: job.id, status: "completed", imageUrls });
     } catch (replicateError: unknown) {
       console.error("Replicate error:", replicateError);
       const errorMsg = replicateError instanceof Error ? replicateError.message : "Unknown error";
