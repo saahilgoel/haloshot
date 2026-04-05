@@ -16,6 +16,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No photos provided" }, { status: 400 });
     }
 
+    // Ensure profile exists (auto-create on first use)
+    await supabase
+      .from("profiles")
+      .upsert({
+        id: user.id,
+        email: user.email || "",
+      }, { onConflict: "id", ignoreDuplicates: true });
+
     // Deactivate any existing face profiles
     await supabase
       .from("face_profiles")

@@ -43,9 +43,16 @@ export default function GeneratePage() {
       const data = await res.json();
       if (data.faceProfile) {
         setFaceProfileId(data.faceProfile.id);
+      } else {
+        // Even if face profile creation fails, allow proceeding
+        // with a placeholder ID — the generate step will handle it
+        console.warn("Face profile creation returned no data:", data);
+        setFaceProfileId("pending");
       }
     } catch (err) {
       console.error("Failed to create face profile:", err);
+      // Still allow user to proceed
+      setFaceProfileId("pending");
     }
   }, []);
 
