@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import {
   Heart,
@@ -46,15 +47,14 @@ const stylePresets = [
   "Editorial",
 ];
 
-// TODO: replace with real data from Supabase
-const mockHeadshots: Array<{
+interface Headshot {
   id: string;
   url: string;
   preset: string;
   isFavorite: boolean;
   haloScore?: number;
   date: string;
-}> = [];
+}
 
 const fadeIn = {
   hidden: { opacity: 0, y: 12 },
@@ -69,6 +69,31 @@ export default function GalleryPage() {
   const [sort, setSort] = useState<SortType>("newest");
   const [styleFilter, setStyleFilter] = useState("All");
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [headshots, setHeadshots] = useState<Headshot[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchHeadshots() {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("saved_headshots")
+        .select("id, original_url, preset_id, is_favorite, halo_score, created_at")
+        .order("created_at", { ascending: false });
+
+      if (data) {
+        setHeadshots(data.map(h => ({
+          id: h.id,
+          url: h.original_url,
+          preset: h.preset_id || "Unknown",
+          isFavorite: h.is_favorite || false,
+          haloScore: h.halo_score || undefined,
+          date: new Date(h.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+        })));
+      }
+      setLoading(false);
+    }
+    fetchHeadshots();
+  }, []);
 
   const toggleFavorite = (id: string) => {
     setFavorites((prev) => {
@@ -79,7 +104,7 @@ export default function GalleryPage() {
     });
   };
 
-  const filtered = mockHeadshots
+  const filtered = headshots
     .filter((h) => {
       if (sort === "favorites")
         return h.isFavorite || favorites.has(h.id);

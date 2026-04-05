@@ -31,11 +31,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid model" }, { status: 400 });
     }
 
-    // Determine image count: default 4 for free, 8 for pro
-    // TODO: check subscription status for real
-    const isPro = false;
+    // Check subscription
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("subscription_tier")
+      .eq("id", user.id)
+      .single();
+
+    const isPro = profile?.subscription_tier === "pro" || profile?.subscription_tier === "team";
     const defaultCount = isPro ? 8 : 4;
-    const totalImages = count ? Math.min(count, defaultCount) : defaultCount;
+    const totalImages = count ? Math.min(count, 8) : defaultCount;
 
     // Get or create a face profile for this user
     let { data: faceProfile } = await supabase
@@ -75,8 +80,15 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      // Build a varied prompt for each image
-      const prompt = buildPrompt(presetId, "this person");
+      // Build editing prompt — for image-to-image models, the prompt should be
+      // a transformation instruction, NOT a full scene description.
+      // The model already sees the face from the reference image.
+      const backgrounds = preset.styleConfig.backgrounds;
+      const outfits = preset.styleConfig.outfits;
+      const bg = backgrounds[i % backgrounds.length].replace(/_/g, " ");
+      const outfit = outfits[i % outfits.length].replace(/_/g, " ");
+
+      const prompt = `Transform this photo into a professional headshot. Keep the person's face, features, and identity exactly the same. Change the background to ${bg}. Dress them in ${outfit}. Studio lighting, sharp focus on eyes, professional photographer quality. Do not change the person's face or ethnicity.`;
 
       let apiUrl: string;
       let inputPayload: Record<string, unknown>;
@@ -87,7 +99,7 @@ export async function POST(req: NextRequest) {
           "https://api.replicate.com/v1/models/google/nano-banana-2/predictions";
         inputPayload = {
           prompt,
-          image_input: photoUrls, // array of URLs
+          image_input: photoUrls, // array of URLs for better identity
           resolution: "2K",
           aspect_ratio: "3:4",
           output_format: "png",
@@ -98,12 +110,10 @@ export async function POST(req: NextRequest) {
           "https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions";
         inputPayload = {
           prompt,
-          input_image: referencePhotoUrl, // single URL
+          input_image: referencePhotoUrl,
           aspect_ratio: "3:4",
           output_format: "webp",
           output_quality: 90,
-          guidance: 3.5,
-          num_inference_steps: 28,
         };
       }
 
