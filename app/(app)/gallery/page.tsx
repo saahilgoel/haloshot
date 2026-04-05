@@ -82,7 +82,7 @@ export default function GalleryPage() {
 
       const { data, error } = await supabase
         .from("saved_headshots")
-        .select("id, original_url, preset_id, is_favorite, halo_score, created_at")
+        .select("id, original_url, preset_id, is_favorite, created_at")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -95,7 +95,7 @@ export default function GalleryPage() {
           url: h.original_url,
           preset: h.preset_id || "Unknown",
           isFavorite: h.is_favorite || false,
-          haloScore: h.halo_score || undefined,
+          haloScore: undefined,
           date: new Date(h.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
         })));
       }
