@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import {
   Camera,
-  Palette,
+  Crosshair,
   Download,
   ArrowRight,
   Briefcase,
@@ -75,7 +75,7 @@ function SectionHeader({
       className="mx-auto mb-14 max-w-2xl text-center"
     >
       {tag && (
-        <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-violet-400">
+        <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-halo-400">
           {tag}
         </span>
       )}
@@ -90,29 +90,71 @@ function SectionHeader({
 }
 
 /* ------------------------------------------------------------------ */
+/*  The Science Section                                                */
+/* ------------------------------------------------------------------ */
+const scienceStats = [
+  { value: "100ms", label: "First impression formed" },
+  { value: "21x", label: "More profile views" },
+  { value: "89%", label: "Hiring managers care about photo quality" },
+  { value: "+38", label: "Average glow-up score" },
+];
+
+function ScienceSection() {
+  return (
+    <div>
+      <motion.p
+        initial={{ opacity: 0, y: 15 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="mx-auto mb-10 max-w-2xl text-center text-lg text-muted-foreground"
+      >
+        In 1920, Edward Thorndike proved that attractive people are assumed to be smarter,
+        kinder, and more competent. Willis &amp; Todorov (2006) showed it takes just 100
+        milliseconds. Your photo is being judged before anyone reads a single word you wrote.
+      </motion.p>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {scienceStats.map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: i * 0.1 }}
+            className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6 text-center"
+          >
+            <p className="font-display text-3xl font-bold text-halo-400 sm:text-4xl">{stat.value}</p>
+            <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{stat.label}</p>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  How It Works                                                       */
 /* ------------------------------------------------------------------ */
 const steps = [
   {
     icon: Camera,
-    title: "Upload 1-3 selfies",
+    title: "Upload a selfie. We\u2019ll be honest.",
     description:
-      "Any recent photos work. Front-facing, good lighting, different angles for best results.",
+      "Any photo works. We analyze it for warmth, competence, and trustworthiness. You get your real Halo Score. No sugarcoating.",
     gradient: "from-violet-500 to-purple-600",
   },
   {
-    icon: Palette,
-    title: "Choose your style",
+    icon: Crosshair,
+    title: "Pick your first impression.",
     description:
-      "Pick from 30+ professional presets: Corporate, Creative, LinkedIn, Casual, and more.",
-    gradient: "from-purple-500 to-pink-600",
+      "Authoritative exec? Approachable creative? Trustworthy advisor? Choose the perception you want to project.",
+    gradient: "from-purple-500 to-halo-600",
   },
   {
     icon: Download,
-    title: "Download in 60 seconds",
+    title: "Meet the version of you that gets the callback.",
     description:
-      "Get studio-quality headshots in HD. Download, share, or use directly on LinkedIn.",
-    gradient: "from-pink-500 to-lime-400",
+      "Studio-quality headshot in 60 seconds. Same face, better halo. Download, share, replace that old photo immediately.",
+    gradient: "from-halo-500 to-lime-400",
   },
 ];
 
@@ -128,7 +170,6 @@ function HowItWorks() {
           transition={{ duration: 0.5, delay: i * 0.15 }}
           className="relative text-center"
         >
-          {/* Connector line (hidden on mobile, first two only) */}
           {i < 2 && (
             <div className="pointer-events-none absolute left-[60%] top-10 hidden h-px w-[80%] bg-gradient-to-r from-white/10 to-transparent sm:block" />
           )}
@@ -142,7 +183,6 @@ function HowItWorks() {
             <step.icon className="h-7 w-7 text-white" />
           </div>
 
-          {/* Step number */}
           <div className="mx-auto mb-3 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs font-bold text-muted-foreground">
             {i + 1}
           </div>
@@ -165,51 +205,51 @@ const useCases = [
     value: "linkedin",
     label: "LinkedIn",
     icon: Briefcase,
-    headline: "Stand out in every recruiter's inbox",
+    headline: "Recruiters decide in 100ms. Make those milliseconds count.",
     description:
-      "Profiles with professional headshots get 14x more views. Get a polished, corporate-friendly photo that makes you look approachable and competent.",
-    cta: "Get Your LinkedIn Headshot",
+      "Profiles with professional headshots get 21x more views. Your selfie from 2019 is costing you interviews. Your Halo Score tells you exactly how much.",
+    cta: "Score your LinkedIn photo",
     href: "/for/linkedin",
   },
   {
     value: "dating",
     label: "Dating",
     icon: Heart,
-    headline: "First impressions that get more matches",
+    headline: "The photo that makes them swipe right AND message first.",
     description:
-      "Dating profiles with high-quality photos get 3x more matches. Get natural, flattering headshots that show the real you without the awkward selfie vibes.",
-    cta: "Upgrade Your Dating Profile",
+      "Dating app algorithms surface profiles with better photos. Higher warmth scores mean more matches. Higher competence scores mean more first messages. We optimize for both.",
+    cta: "Score your dating photo",
     href: "/for/dating",
   },
   {
     value: "teams",
     label: "Teams",
     icon: Users,
-    headline: "Consistent team photos in minutes, not months",
+    headline: "Your team page looks like a hostage situation.",
     description:
-      "Get your entire team looking cohesive with matching style headshots. No more scheduling headaches. Onboard new hires with a headshot on day one.",
-    cta: "Get Team Headshots",
+      "Mismatched lighting. Different decades. One person clearly in their car. Get your entire team to a consistent Halo Score in one afternoon.",
+    cta: "Fix the team page",
     href: "/for/teams",
   },
   {
     value: "realestate",
     label: "Real Estate",
     icon: Building2,
-    headline: "The agent headshot that wins listings",
+    headline: "Clients pick agents they trust on sight.",
     description:
-      "In real estate, your face IS your brand. Get a trustworthy, professional headshot for your business cards, signs, and MLS listings.",
-    cta: "Get Your Agent Headshot",
+      "In real estate, your face IS your brand. A high trustworthiness score on your headshot means more listing appointments. The math is simple.",
+    cta: "Score your agent headshot",
     href: "/for/real-estate",
   },
   {
     value: "social",
     label: "Social Media",
     icon: Share2,
-    headline: "Content-ready headshots for every platform",
+    headline: "Every platform. One face. Maximum impact.",
     description:
-      "From Twitter/X to Instagram to your podcast cover. Get headshots optimized for social media that make your brand memorable.",
-    cta: "Create Social Headshots",
-    href: "/signup",
+      "From Twitter/X to Instagram to your podcast cover. Get headshots scored and optimized for the first impression each platform demands.",
+    cta: "Score your social photos",
+    href: "/score",
   },
 ];
 
@@ -221,7 +261,7 @@ function UseCaseTabs() {
           <TabsTrigger
             key={uc.value}
             value={uc.value}
-            className="gap-2 rounded-lg border border-transparent px-4 py-2.5 data-[state=active]:border-violet-500/50 data-[state=active]:bg-violet-600/10 data-[state=active]:text-violet-300 data-[state=active]:shadow-none"
+            className="gap-2 rounded-lg border border-transparent px-4 py-2.5 data-[state=active]:border-halo-500/50 data-[state=active]:bg-halo-600/10 data-[state=active]:text-halo-300 data-[state=active]:shadow-none"
           >
             <uc.icon className="h-4 w-4" />
             {uc.label}
@@ -246,16 +286,15 @@ function UseCaseTabs() {
               </p>
               <Link
                 href={uc.href}
-                className="group mt-6 inline-flex items-center gap-2 text-sm font-semibold text-lime-400 transition-colors hover:text-lime-300"
+                className="group mt-6 inline-flex items-center gap-2 text-sm font-semibold text-halo-400 transition-colors hover:text-halo-300"
               >
                 {uc.cta}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>
 
-            {/* Visual placeholder */}
-            <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-violet-600/20 via-purple-500/10 to-transparent border border-white/[0.06] flex items-center justify-center">
-              <uc.icon className="h-16 w-16 text-violet-400/40" />
+            <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-violet-600/20 via-halo-500/10 to-transparent border border-white/[0.06] flex items-center justify-center">
+              <uc.icon className="h-16 w-16 text-halo-400/40" />
             </div>
           </motion.div>
         </TabsContent>
@@ -269,28 +308,28 @@ function UseCaseTabs() {
 /* ------------------------------------------------------------------ */
 const faqs = [
   {
-    q: "How does HaloShot work?",
-    a: "Upload 1-3 selfies, choose a professional style preset, and our AI model generates studio-quality headshots in about 60 seconds. The AI is specifically trained to preserve your unique facial features and identity.",
+    q: "Will it look like me?",
+    a: "Yes. That\u2019s the whole point. Our model achieves 98% identity accuracy. It\u2019s you \u2014 same bone structure, same features, same face. Just with better lighting, framing, and the subtle adjustments that push your Halo Score up. If it doesn\u2019t look like you, we refund you. No questions.",
   },
   {
-    q: "Will the headshot actually look like me?",
-    a: "Yes, that&apos;s our core differentiator. Our latest model achieves 98% identity accuracy. Unlike other tools that produce generic-looking results, HaloShot is obsessive about likeness. If you&apos;re not happy, we offer a full refund.",
+    q: "Is the Halo Score real science?",
+    a: "The halo effect was first documented by Edward Thorndike in 1920. Willis & Todorov (2006) proved first impressions form in 100 milliseconds. Our scoring model is trained on the warmth-competence framework from Fiske et al. (2007). Every dimension we measure has decades of peer-reviewed research behind it. This isn\u2019t vibes. It\u2019s data.",
   },
   {
-    q: "What happens to my photos after generation?",
-    a: "Your uploaded selfies and generated headshots are encrypted (AES-256) and automatically deleted after 30 days. We never use your photos to train our models. You can also manually delete them at any time from your dashboard.",
+    q: "Can I cancel?",
+    a: "Anytime. From your dashboard. Takes 10 seconds. You keep access until the end of your billing period. No guilt trips, no retention flows, no \u201Care you sure?\u201D popups. We\u2019d rather you come back later than resent us now.",
   },
   {
-    q: "Can I use these headshots commercially?",
-    a: "Pro and Team plans include a full commercial license. Use your headshots on LinkedIn, company websites, business cards, real estate listings, or anywhere else you need a professional photo.",
+    q: "What about privacy?",
+    a: "Your photos are encrypted with AES-256 and automatically deleted after 30 days. We never use your photos to train our models. Never share them. Never sell them. You can manually delete everything at any time. What happens in HaloShot stays in HaloShot.",
   },
   {
     q: "How is this different from other AI headshot tools?",
-    a: "Three key differences: (1) Speed: 60 seconds vs. 1-2 hours, (2) Likeness: 98% identity accuracy vs. industry average of ~82%, (3) Price: free tier available and Pro at $9.99/mo vs. $25-39 one-time for limited results.",
+    a: "Three things. (1) The Halo Score: no one else tells you WHERE your photo stands before and after. (2) Speed: 60 seconds, not 2 hours. (3) Psychology: we don\u2019t just make you \u201Clook better\u201D \u2014 we optimize for the specific perception dimensions (warmth, competence, trustworthiness) that drive real-world outcomes.",
   },
   {
-    q: "What if I don&apos;t like the results?",
-    a: "Generate as many variations as your plan allows until you&apos;re happy. Pro users get 100 headshots/month and unlimited style presets. If you&apos;re still not satisfied, we offer a full money-back guarantee within 7 days.",
+    q: "What if I don\u2019t like the results?",
+    a: "Generate as many variations as your plan allows until you\u2019re satisfied. Pro users get 100 headshots/month. If you\u2019re still not happy, we offer a full refund within 7 days. But honestly? Most people are obsessed after the first one.",
   },
 ];
 
@@ -308,12 +347,22 @@ export default function MarketingPage() {
         <TrustBadges />
       </Section>
 
-      {/* Before / After */}
+      {/* The Science Section */}
+      <Section id="science">
+        <SectionHeader
+          tag="The Science"
+          title="The halo effect is real."
+          description="Attractive people are assumed to be smarter, kinder, and more competent. It\u2019s not fair. But it\u2019s measurable. And now it\u2019s hackable."
+        />
+        <ScienceSection />
+      </Section>
+
+      {/* Glow-Up Gallery (Before / After) */}
       <Section id="examples">
         <SectionHeader
-          tag="Results"
-          title="See the transformation"
-          description="Real selfies in, professional headshots out. Hover to see the magic."
+          tag="Glow-Up Gallery"
+          title="Before and after, scored."
+          description="Real selfies in. Halo-optimized headshots out. Hover to see the glow-up."
         />
         <BeforeAfter />
       </Section>
@@ -321,9 +370,8 @@ export default function MarketingPage() {
       {/* How It Works */}
       <Section>
         <SectionHeader
-          tag="Simple"
-          title="How it works"
-          description="Three steps. Sixty seconds. Studio-quality headshots."
+          tag="How It Works"
+          title="Three steps. Sixty seconds. A better first impression."
         />
         <HowItWorks />
       </Section>
@@ -331,9 +379,9 @@ export default function MarketingPage() {
       {/* Social Proof */}
       <Section>
         <SectionHeader
-          tag="Testimonials"
-          title="Loved by professionals everywhere"
-          description="Don't take our word for it. Here's what our users say."
+          tag="Proof"
+          title="People are talking about their scores."
+          description="We didn\u2019t ask them to. They just couldn\u2019t stop."
         />
         <Testimonials />
       </Section>
@@ -342,8 +390,8 @@ export default function MarketingPage() {
       <Section>
         <SectionHeader
           tag="Use Cases"
-          title="Perfect headshots for every occasion"
-          description="Whether it&apos;s a job search, a dating profile, or a team page, HaloShot has you covered."
+          title="Where your Halo Score matters most"
+          description="Every platform where a photo precedes a conversation."
         />
         <UseCaseTabs />
       </Section>
@@ -353,7 +401,7 @@ export default function MarketingPage() {
         <SectionHeader
           tag="Compare"
           title="How HaloShot stacks up"
-          description="We built HaloShot to be faster, cheaper, and more accurate than every alternative."
+          description="Spoiler: we\u2019re the only ones who tell you your score."
         />
         <ComparisonTable />
       </Section>
@@ -362,8 +410,8 @@ export default function MarketingPage() {
       <Section id="pricing">
         <SectionHeader
           tag="Pricing"
-          title="Simple, transparent pricing"
-          description="Start free. Upgrade when you need more. Cancel anytime."
+          title="Honest pricing for honest feedback"
+          description="Start free with a reality check. Upgrade when you\u2019re ready for the glow-up."
         />
         <PricingTable />
       </Section>
@@ -372,7 +420,7 @@ export default function MarketingPage() {
       <Section>
         <SectionHeader
           tag="FAQ"
-          title="Frequently asked questions"
+          title="Questions we actually get asked"
         />
         <div className="mx-auto max-w-2xl">
           <Accordion type="single" collapsible className="w-full">

@@ -10,7 +10,7 @@ const testimonials = [
     role: "Product Manager",
     company: "Stripe",
     quote:
-      "I needed a LinkedIn photo fast before a conference. HaloShot gave me something better than the $400 studio shoot I did last year.",
+      "My LinkedIn photo scored a 34. Brutal. After my glow-up: 87. I got 3 recruiter messages that week.",
     rating: 5,
     gradient: "from-violet-500 to-purple-600",
   },
@@ -19,25 +19,25 @@ const testimonials = [
     role: "Real Estate Agent",
     company: "Compass",
     quote:
-      "My team of 12 agents all got professional headshots in one afternoon. Used to take weeks to schedule a photographer for everyone.",
+      "Went from a 41 to an 89. Clients started commenting that I looked &apos;more trustworthy.&apos; The halo effect is no joke.",
     rating: 5,
-    gradient: "from-rose-500 to-pink-600",
+    gradient: "from-halo-500 to-amber-600",
   },
   {
     name: "Emily Rodriguez",
     role: "Software Engineer",
     company: "Google",
     quote:
-      "Finally a headshot that actually looks like me and not some AI fever dream. The likeness is genuinely impressive.",
+      "I thought my old headshot was fine. HaloShot scored it a 52. Ouch. The new one hit 91 and my Hinge matches tripled.",
     rating: 5,
-    gradient: "from-amber-500 to-orange-600",
+    gradient: "from-rose-500 to-pink-600",
   },
   {
     name: "David Kim",
     role: "Startup Founder",
     company: "YC W24",
     quote:
-      "We put our whole founding team's headshots on the website using HaloShot. Consistent style, professional look, zero hassle.",
+      "Our whole founding team got scored. Average went from 38 to 84. Investors literally commented on our new headshots.",
     rating: 5,
     gradient: "from-emerald-500 to-teal-600",
   },
@@ -46,7 +46,7 @@ const testimonials = [
     role: "Marketing Director",
     company: "HubSpot",
     quote:
-      "The quality jump from v1 to their latest model is insane. I've tried every AI headshot tool and HaloShot is in a different league.",
+      "The Halo Score is addictive. I scored every photo I&apos;ve ever used on LinkedIn. Turns out I peaked in 2019 at a 56. Now I&apos;m at 93.",
     rating: 5,
     gradient: "from-cyan-500 to-blue-600",
   },
@@ -55,8 +55,8 @@ const testimonials = [
     role: "Executive Coach",
     company: "Self-employed",
     quote:
-      "My clients always ask where I got my headshot. When I tell them it&apos;s AI they never believe me. That's the highest compliment.",
-    rating: 4,
+      "I recommend HaloShot to every client now. One CEO went from a 29 warmth score to 78. His team said he seemed &apos;more approachable&apos; overnight.",
+    rating: 5,
     gradient: "from-fuchsia-500 to-purple-600",
   },
 ];
@@ -80,7 +80,7 @@ export function Testimonials() {
                 className={cn(
                   "h-4 w-4",
                   j < t.rating
-                    ? "fill-lime-400 text-lime-400"
+                    ? "fill-halo-400 text-halo-400"
                     : "fill-white/10 text-white/10"
                 )}
               />

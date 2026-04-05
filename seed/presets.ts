@@ -1,8 +1,8 @@
 /**
- * Seed script: Insert all style presets into the style_presets table.
+ * Seed script: Insert all v2 HaloShot style presets into the style_presets table.
  *
  * Run via: npx tsx seed/presets.ts
- * Or add to package.json: "seed": "tsx seed/presets.ts"
+ * Or: npm run seed
  */
 
 import { createAdminClient } from "../lib/supabase/admin";
@@ -18,13 +18,14 @@ async function seedPresets() {
     prompt_template: preset.promptTemplate,
     negative_prompt: preset.negativePrompt,
     style_config: preset.styleConfig,
+    halo_pitch: preset.haloPitch,
     is_free: preset.isFree,
     is_active: true,
     sort_order: index,
     preview_images: [],
   }));
 
-  console.log(`Seeding ${presets.length} style presets...`);
+  console.log(`Seeding ${presets.length} HaloShot v2 style presets...`);
 
   const { data, error } = await createAdminClient()
     .from("style_presets")
@@ -35,7 +36,10 @@ async function seedPresets() {
     process.exit(1);
   }
 
-  console.log("Successfully seeded style presets:", presets.map((p) => p.id));
+  console.log(
+    "Successfully seeded style presets:",
+    presets.map((p) => `${p.id} (${p.name})`).join(", ")
+  );
   process.exit(0);
 }
 

@@ -11,6 +11,7 @@ export interface StylePreset {
     | "industry";
   icon: string;
   isFree: boolean;
+  haloPitch: string;
   promptTemplate: string;
   negativePrompt: string;
   styleConfig: {
@@ -21,266 +22,282 @@ export interface StylePreset {
 }
 
 export const STYLE_PRESETS: Record<string, StylePreset> = {
-  linkedin_professional: {
-    id: "linkedin_professional",
-    name: "LinkedIn Professional",
+  linkedin_executive: {
+    id: "linkedin_executive",
+    name: "The Closer",
     description:
-      "Clean, confident headshot perfect for LinkedIn and corporate profiles",
+      "Power headshot that signals executive presence. Optimized for LinkedIn, board decks, and press features.",
     category: "professional",
     icon: "briefcase",
     isFree: true,
+    haloPitch:
+      "Boosts Competence +2.1 and Trust +1.8 on average. The #1 preset for landing inbound recruiter messages.",
     promptTemplate:
-      "Professional headshot portrait of {subject}, wearing {outfit}, against a {background} background. Soft studio lighting, sharp focus on face, shallow depth of field, confident expression, looking directly at camera. Corporate photography style, high-end studio portrait.",
+      "Executive portrait of {subject}, wearing {outfit}, against a {background} background. Precise studio lighting with subtle rim light, razor-sharp focus on eyes, shallow depth of field. Commanding yet approachable expression, slight forward lean suggesting engagement. Shot on medium format digital, corporate editorial quality.",
     negativePrompt:
-      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, painting, illustration, oversaturated, unnatural skin, bad teeth, crossed eyes",
+      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, painting, illustration, oversaturated, unnatural skin, bad teeth, crossed eyes, casual setting",
     styleConfig: {
       backgrounds: [
-        "neutral gray gradient",
-        "soft blue gradient",
-        "white studio",
-        "light beige",
+        "deep charcoal gradient",
+        "navy blue gradient",
+        "warm gray studio",
+        "soft white with subtle shadow",
       ],
       outfits: [
-        "a dark navy blazer over a white shirt",
-        "a charcoal suit with a subtle tie",
-        "business professional attire",
-        "a well-fitted dark suit",
+        "a tailored navy blazer over a crisp white shirt",
+        "a charcoal suit with a subtle navy tie",
+        "a well-cut dark suit with pocket square",
+        "a premium navy turtleneck under a structured blazer",
       ],
       lighting: [
-        "soft studio lighting",
-        "Rembrandt lighting",
-        "butterfly lighting",
+        "Rembrandt lighting with subtle fill",
+        "butterfly lighting with rim accent",
+        "loop lighting with soft kicker",
       ],
     },
   },
 
-  founder_speaker: {
-    id: "founder_speaker",
-    name: "Founder / Speaker",
+  founder_energy: {
+    id: "founder_energy",
+    name: "Founder Mode",
     description:
-      "Bold, approachable look for founders, speakers, and thought leaders",
+      "The shot that says 'I just closed a round and I am building the future.' For pitch decks, TechCrunch, and your About page.",
     category: "professional",
-    icon: "mic",
+    icon: "rocket",
     isFree: false,
+    haloPitch:
+      "Maximizes Dominance +2.4 and Approachability +1.6. The paradox combo that makes VCs reply to your cold email.",
     promptTemplate:
-      "Charismatic portrait of {subject}, wearing {outfit}, {background}. Warm directional lighting, slight smile conveying confidence, editorial photography style. Shallow depth of field, bokeh background, magazine-quality portrait.",
+      "Charismatic founder portrait of {subject}, wearing {outfit}, {background}. Dynamic editorial lighting with warm directional key, confident half-smile suggesting knowing something others do not, slight head tilt conveying curiosity. Shallow depth of field, cinematic bokeh, magazine cover quality. Shot like a Forbes 30 Under 30 feature.",
     negativePrompt:
-      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, painting, illustration, oversaturated, unnatural skin",
+      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, painting, illustration, oversaturated, unnatural skin, corporate stiffness, formal pose",
     styleConfig: {
       backgrounds: [
-        "in a modern office with floor-to-ceiling windows",
-        "against a dark textured wall with warm accent lighting",
-        "on stage with soft spotlight",
-        "in a co-working space with natural light",
+        "in a modern loft office with floor-to-ceiling windows and city skyline",
+        "against an exposed brick wall with warm Edison bulb lighting",
+        "in a sleek co-working space with blurred monitors in background",
+        "against a dark textured wall with warm accent spot",
       ],
       outfits: [
         "a crisp black turtleneck",
-        "a smart-casual blazer with no tie",
-        "a fitted crew-neck sweater",
-        "a casual button-down shirt",
+        "a fitted dark henley with sleeves slightly pushed up",
+        "a smart casual blazer over a premium crew-neck tee",
+        "a minimal dark zip-up over a clean white tee",
       ],
       lighting: [
-        "warm directional lighting",
-        "golden hour side lighting",
-        "editorial studio lighting",
+        "warm golden directional with subtle fill",
+        "editorial side lighting with background separation",
+        "natural window light with warm bounce",
       ],
     },
   },
 
-  creative_portfolio: {
-    id: "creative_portfolio",
-    name: "Creative Portfolio",
+  dating_magnetic: {
+    id: "dating_magnetic",
+    name: "Main Character",
     description:
-      "Artistic, moody headshot for designers, artists, and creatives",
+      "The photo that gets right-swiped. Warm, magnetic, effortlessly attractive. Optimized for Hinge, Bumble, and your Instagram grid.",
+    category: "dating",
+    icon: "sparkles",
+    isFree: false,
+    haloPitch:
+      "Warmth +2.8, Approachability +2.5. Users report 3x more matches within the first week of switching their main photo.",
+    promptTemplate:
+      "Naturally attractive portrait of {subject}, wearing {outfit}, {background}. Soft golden light creating warm skin tones, genuine relaxed smile with slight squint suggesting real laughter, candid energy. Shallow depth of field with dreamy bokeh, lifestyle photography feel. The kind of photo that looks effortless but is perfectly lit.",
+    negativePrompt:
+      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, painting, corporate, stiff, fake smile, oversaturated, gym selfie, bathroom mirror, sunglasses",
+    styleConfig: {
+      backgrounds: [
+        "outdoors in golden hour sunlight with warm bokeh foliage",
+        "at a sunlit cafe terrace with soft ambient warmth",
+        "on a city rooftop during magic hour with soft sky",
+        "in a cozy bookstore with warm window light",
+      ],
+      outfits: [
+        "a well-fitted casual linen shirt, top button undone",
+        "a soft knit henley in earth tones",
+        "a casual fitted crew-neck tee that fits perfectly",
+        "a light casual button-down with rolled sleeves",
+      ],
+      lighting: [
+        "golden hour rim light with warm fill",
+        "soft diffused natural sunlight",
+        "warm window light with gentle backlight",
+      ],
+    },
+  },
+
+  creative_edge: {
+    id: "creative_edge",
+    name: "The Portfolio",
+    description:
+      "Moody, editorial, unmistakably creative. For Behance, your studio website, and gallery openings.",
     category: "creative",
     icon: "palette",
     isFree: false,
+    haloPitch:
+      "Dominance +2.2 and Competence +1.9. Creative directors spend 40% longer viewing profiles with editorial-quality headshots.",
     promptTemplate:
-      "Artistic portrait of {subject}, wearing {outfit}, {background}. Dramatic lighting with deep shadows, creative composition, moody atmosphere. Editorial fashion photography style, cinematic color grading, artistic expression.",
+      "Editorial creative portrait of {subject}, wearing {outfit}, {background}. Dramatic directional lighting with deep sculpted shadows, intentional mood, artistic composition with negative space. Cinematic color grading with muted tones, fashion photography sensibility. The headshot of someone whose work you want to hire.",
     negativePrompt:
-      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, overly bright, flat lighting, corporate look",
+      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, overly bright, flat lighting, corporate look, generic, stock photo feel",
     styleConfig: {
       backgrounds: [
-        "in a dimly lit art studio with paint splatters",
-        "against a textured concrete wall",
-        "in a gallery with dramatic shadows",
-        "against a dark backdrop with colored gel lighting",
+        "in a dimly lit studio with paint-splattered walls",
+        "against raw concrete with a single dramatic light source",
+        "in a gallery space with deep shadows",
+        "against a dark backdrop with a single colored gel accent",
       ],
       outfits: [
-        "a black leather jacket",
-        "an oversized vintage sweater",
-        "a minimalist black top",
-        "a bold patterned shirt",
+        "a structured black jacket with interesting texture",
+        "an architectural minimalist black top",
+        "a vintage-inspired dark ensemble",
+        "a bold monochrome look with one statement piece",
       ],
       lighting: [
-        "dramatic side lighting",
-        "split lighting",
-        "rim lighting with colored gels",
+        "hard dramatic side light with no fill",
+        "split lighting with subtle colored rim",
+        "overhead spot with deep shadows",
       ],
     },
   },
 
-  dating_warm: {
-    id: "dating_warm",
-    name: "Dating Profile",
+  corporate_uniform: {
+    id: "corporate_uniform",
+    name: "The Team Shot",
     description:
-      "Warm, approachable, and natural look for dating app profiles",
-    category: "dating",
-    icon: "heart",
-    isFree: false,
-    promptTemplate:
-      "Natural, warm portrait of {subject}, wearing {outfit}, {background}. Soft natural sunlight, genuine smile, approachable and friendly expression. Lifestyle photography style, warm color tones, natural setting, candid feel.",
-    negativePrompt:
-      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, painting, corporate, stiff pose, fake smile, oversaturated",
-    styleConfig: {
-      backgrounds: [
-        "outdoors in a sunlit park with bokeh foliage",
-        "in a cozy coffee shop with warm tones",
-        "on a city street during golden hour",
-        "in front of colorful street art",
-      ],
-      outfits: [
-        "a casual fitted t-shirt",
-        "a light linen shirt",
-        "a comfortable henley",
-        "a casual denim jacket",
-      ],
-      lighting: [
-        "golden hour natural light",
-        "soft window light",
-        "warm ambient lighting",
-      ],
-    },
-  },
-
-  corporate_team: {
-    id: "corporate_team",
-    name: "Corporate Team",
-    description:
-      "Consistent, polished team headshots for company websites and directories",
+      "Pixel-perfect consistency for your About page. Every team member looks equally polished, on-brand, and approachable.",
     category: "corporate",
     icon: "users",
     isFree: false,
+    haloPitch:
+      "Trust +2.6 across the entire team. Companies with consistent headshots see 34% higher trust scores on their About pages.",
     promptTemplate:
-      "Professional corporate headshot of {subject}, wearing {outfit}, against a {background} background. Even studio lighting, neutral expression with slight smile, looking directly at camera. Consistent corporate photography, clean and polished, suitable for company website.",
+      "Consistent corporate headshot of {subject}, wearing {outfit}, against a {background} background. Perfectly even studio lighting with no harsh shadows, professional neutral expression with approachable slight smile, eyes directly at camera. Shot for team page consistency, clean and polished. Identical lighting setup, framing, and color temperature as a cohesive team set.",
     negativePrompt:
-      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, painting, illustration, dramatic lighting, casual setting",
+      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, painting, illustration, dramatic lighting, casual setting, inconsistent lighting, artistic, moody",
     styleConfig: {
       backgrounds: [
-        "clean white",
+        "clean white seamless",
         "light gray gradient",
-        "corporate blue gradient",
-        "neutral cream",
+        "soft brand-neutral gradient",
+        "bright neutral cream",
       ],
       outfits: [
-        "a dark business suit with tie",
-        "business formal attire",
-        "a professional blazer and collared shirt",
-        "corporate business wear",
+        "a dark business suit with a crisp white shirt",
+        "professional business formal attire",
+        "a tailored blazer with collared shirt",
+        "polished corporate business wear",
       ],
       lighting: [
-        "even studio lighting",
-        "flat professional lighting",
-        "soft frontal lighting",
+        "perfectly even two-light studio setup",
+        "flat professional clamshell lighting",
+        "soft frontal key with matching fill",
       ],
     },
   },
 
-  real_estate: {
-    id: "real_estate",
-    name: "Real Estate Agent",
+  south_asian_pro: {
+    id: "south_asian_pro",
+    name: "Desi Professional",
     description:
-      "Trustworthy, professional headshot for real estate marketing materials",
-    category: "industry",
-    icon: "home",
-    isFree: false,
-    promptTemplate:
-      "Professional real estate agent portrait of {subject}, wearing {outfit}, {background}. Bright, clean lighting, trustworthy warm smile, approachable and professional. Commercial photography style, high-end quality, suitable for yard signs and brochures.",
-    negativePrompt:
-      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, painting, dark, moody, artistic",
-    styleConfig: {
-      backgrounds: [
-        "in front of a luxury home exterior",
-        "against a bright white studio backdrop",
-        "in a modern home interior",
-        "with a soft blue gradient background",
-      ],
-      outfits: [
-        "a sharp blazer with an open collar",
-        "professional business attire",
-        "a well-tailored suit",
-        "smart business casual wear",
-      ],
-      lighting: [
-        "bright natural light",
-        "soft fill lighting",
-        "clean studio lighting",
-      ],
-    },
-  },
-
-  social_media: {
-    id: "social_media",
-    name: "Social Media",
-    description:
-      "Eye-catching, vibrant headshot optimized for Instagram and social profiles",
-    category: "social",
-    icon: "camera",
-    isFree: false,
-    promptTemplate:
-      "Vibrant social media portrait of {subject}, wearing {outfit}, {background}. Trendy photography style, punchy colors, slightly editorial feel. Modern composition, Instagram-worthy, high engagement aesthetic, confident and stylish.",
-    negativePrompt:
-      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, dull colors, corporate, boring, stiff",
-    styleConfig: {
-      backgrounds: [
-        "against a neon-lit urban wall",
-        "with colorful bokeh city lights",
-        "in a trendy minimalist space",
-        "against a vibrant mural",
-      ],
-      outfits: [
-        "trendy streetwear",
-        "a stylish oversized jacket",
-        "a bold colored top",
-        "fashionable casual attire",
-      ],
-      lighting: [
-        "neon accent lighting",
-        "golden hour backlight",
-        "ring light with soft fill",
-      ],
-    },
-  },
-
-  indian_professional: {
-    id: "indian_professional",
-    name: "Indian Professional",
-    description:
-      "Optimized for South Asian skin tones and features with culturally relevant styling",
+      "Lighting and color science tuned specifically for South Asian skin tones. No washed-out, no over-smoothed. Just you, looking incredible.",
     category: "professional",
     icon: "star",
     isFree: false,
+    haloPitch:
+      "Warmth +2.3, Trust +2.0. South Asian users see the biggest Halo Score jumps with skin-tone-optimized lighting -- avg +3.1 overall.",
     promptTemplate:
-      "Professional headshot portrait of {subject}, wearing {outfit}, against a {background} background. Optimized studio lighting for South Asian skin tones, true-to-life skin color reproduction. Confident and warm expression, sharp focus on face, high-end studio portrait photography. Accurate skin tone representation, no whitewashing.",
+      "Professional headshot portrait of {subject}, wearing {outfit}, against a {background} background. Studio lighting specifically calibrated for rich South Asian skin tones with warm undertones preserved. True-to-life color reproduction, no whitewashing, no over-smoothing. Confident and warm expression, sharp focus on eyes. High-end portrait photography with accurate melanin-rich skin rendering, natural skin texture visible.",
     negativePrompt:
-      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, painting, illustration, whitewashed skin, oversaturated, unnatural skin tone, pale skin",
+      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, painting, illustration, whitewashed skin, oversaturated, unnatural skin tone, pale skin, over-smoothed, plastic skin, ashy tones",
     styleConfig: {
       backgrounds: [
-        "warm neutral gradient",
-        "soft cream studio backdrop",
-        "elegant dark backdrop",
-        "subtle earth-toned gradient",
+        "warm rich gradient with amber undertones",
+        "deep cream studio backdrop",
+        "elegant dark chocolate backdrop",
+        "subtle warm earth-toned gradient",
       ],
       outfits: [
-        "a crisp formal shirt with collar",
-        "a well-fitted blazer in charcoal",
-        "traditional formal wear",
-        "smart Indo-Western fusion attire",
+        "a crisp formal shirt with structured collar",
+        "a well-fitted blazer in charcoal with warm undertones",
+        "elegant traditional-meets-modern formal wear",
+        "smart Indo-Western fusion attire with clean lines",
       ],
       lighting: [
-        "warm balanced studio lighting",
-        "soft diffused lighting for even skin tones",
-        "Rembrandt lighting with warm fill",
+        "warm balanced studio lighting tuned for melanin-rich skin",
+        "soft diffused key light with warm fill for even skin tones",
+        "Rembrandt lighting with warm amber fill",
+      ],
+    },
+  },
+
+  real_estate_trust: {
+    id: "real_estate_trust",
+    name: "The Listing Agent",
+    description:
+      "The headshot that goes on every yard sign, brochure, and Zillow profile. Trustworthy, approachable, and market-ready.",
+    category: "industry",
+    icon: "home",
+    isFree: false,
+    haloPitch:
+      "Trust +3.1, Approachability +2.4. Agents with high-Trust headshots get 28% more listing inquiries. Your face IS your brand.",
+    promptTemplate:
+      "Professional real estate agent portrait of {subject}, wearing {outfit}, {background}. Bright, clean, high-key lighting, warm trustworthy smile that says 'I will sell your home for above asking.' Approachable and professional, perfect for yard signs at any size. Commercial photography quality, crisp and print-ready, suitable for brochures and digital.",
+    negativePrompt:
+      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, painting, dark, moody, artistic, dramatic, edgy, casual",
+    styleConfig: {
+      backgrounds: [
+        "in front of a luxury home exterior with soft focus",
+        "against a bright white studio backdrop",
+        "against a clean blue gradient suggesting sky and trust",
+        "in a modern home interior with natural light",
+      ],
+      outfits: [
+        "a sharp blazer with open collar and confident fit",
+        "polished professional attire with a pop of color",
+        "a well-tailored suit suggesting market expertise",
+        "smart professional wear with approachable styling",
+      ],
+      lighting: [
+        "bright high-key lighting with soft shadows",
+        "clean fill lighting for print reproduction",
+        "natural bright studio light with warm tones",
+      ],
+    },
+  },
+
+  social_scroll_stop: {
+    id: "social_scroll_stop",
+    name: "Scroll Stopper",
+    description:
+      "The profile photo that breaks the scroll. Vibrant, magnetic, algorithmically optimized for engagement across Instagram, TikTok, and X.",
+    category: "social",
+    icon: "zap",
+    isFree: false,
+    haloPitch:
+      "Approachability +2.7, Warmth +2.3. Scroll Stopper photos get 4.2x more profile visits. The algorithm rewards faces that pop.",
+    promptTemplate:
+      "Vibrant scroll-stopping social media portrait of {subject}, wearing {outfit}, {background}. Punchy saturated colors optimized for small circular crops, high contrast face against background, magnetic eye contact. Modern editorial-meets-lifestyle feel, Instagram-native composition. The face that makes you tap the profile.",
+    negativePrompt:
+      "blurry, distorted face, extra limbs, deformed, low quality, cartoon, anime, dull colors, corporate, boring, stiff, formal, flat, washed out",
+    styleConfig: {
+      backgrounds: [
+        "against a neon-lit urban wall with color spill on skin",
+        "with vibrant bokeh city lights creating a halo effect",
+        "in a trendy minimalist space with one bold color accent",
+        "against a saturated gradient wall in trending colors",
+      ],
+      outfits: [
+        "trendy elevated streetwear in bold tones",
+        "a standout jacket or layered look with texture",
+        "a bold colored top that pops against skin tone",
+        "fashionable athleisure with clean lines",
+      ],
+      lighting: [
+        "neon accent lighting with warm fill",
+        "golden hour backlight with lens flare kiss",
+        "ring light key with colored background spill",
       ],
     },
   },

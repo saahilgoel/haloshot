@@ -23,7 +23,7 @@ export function useSubscription(): UseSubscriptionReturn {
     const tier: SubscriptionTier = profile?.subscription_tier ?? "free";
     const status = profile?.subscription_status ?? "inactive";
     const periodEnd = profile?.subscription_period_end;
-    const generationsCount = profile?.generations_count ?? 0;
+    const generationsCount = profile?.generations_count_total ?? 0;
 
     const isPeriodActive = periodEnd
       ? new Date(periodEnd) > new Date()

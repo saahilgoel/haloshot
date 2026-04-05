@@ -2,6 +2,8 @@ export type SubscriptionTier = "free" | "pro" | "team";
 export type SubscriptionStatus = "active" | "canceled" | "past_due" | "trialing" | "inactive";
 export type JobStatus = "pending" | "processing" | "completed" | "failed";
 export type TeamRole = "owner" | "admin" | "member";
+export type NudgeCategory = "halo_decay" | "psychology_facts" | "social_proof" | "fomo" | "seasonal";
+export type HaloScoreSource = "upload" | "generation" | "external";
 
 export interface Profile {
   id: string;
@@ -13,21 +15,64 @@ export interface Profile {
   subscription_period_end: string | null;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
-  generations_count: number;
+  generations_count_total: number;
+  generations_count_month: number;
+  generations_reset_at: string;
+  current_halo_score: number | null;
+  current_halo_breakdown: HaloBreakdown | null;
+  halo_score_updated_at: string | null;
+  primary_use_case: string | null;
+  onboarding_completed: boolean;
+  preferred_styles: string[];
   referral_code: string | null;
   referred_by: string | null;
-  team_id: string | null;
-  onboarded: boolean;
+  referral_credits: number;
+  locale: string;
+  timezone: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface HaloBreakdown {
+  warmth: number;
+  competence: number;
+  trust: number;
+  approachability: number;
+  dominance: number;
+}
+
+export interface HaloScore {
+  id: string;
+  user_id: string;
+  photo_url: string;
+  overall_score: number;
+  warmth: number;
+  competence: number;
+  trust: number;
+  approachability: number;
+  dominance: number;
+  analysis_text: string | null;
+  roast_line: string | null;
+  improvement_tips: string[];
+  lighting_quality: number | null;
+  background_quality: number | null;
+  expression_quality: number | null;
+  source: HaloScoreSource;
+  generation_job_id: string | null;
+  created_at: string;
 }
 
 export interface FaceProfile {
   id: string;
   user_id: string;
-  label: string;
   photo_urls: string[];
-  embedding_status: "pending" | "processing" | "ready" | "failed";
+  face_embedding: number[] | null;
+  detected_features: Record<string, unknown> | null;
+  status: "processing" | "ready" | "failed";
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -36,46 +81,88 @@ export interface GenerationJob {
   id: string;
   user_id: string;
   face_profile_id: string;
-  style_preset_id: string | null;
-  prompt: string;
-  negative_prompt: string | null;
-  status: JobStatus;
-  progress: number;
-  result_urls: string[];
+  preset_id: string;
+  custom_prompt: string | null;
+  style_options: Record<string, unknown>;
+  num_images: number;
+  replicate_prediction_id: string | null;
+  model_version: string | null;
+  status: "queued" | "processing" | "completed" | "failed" | "canceled";
+  generated_image_urls: string[];
+  similarity_scores: number[];
+  processing_time_ms: number | null;
   error_message: string | null;
-  model_version: string;
-  seed: number | null;
-  parameters: Record<string, unknown>;
-  started_at: string | null;
-  completed_at: string | null;
+  halo_scores: number[];
+  before_halo_score: number | null;
+  best_after_halo_score: number | null;
+  glow_up_delta: number | null;
+  cost_usd: number;
   created_at: string;
+  completed_at: string | null;
 }
 
 export interface SavedHeadshot {
   id: string;
   user_id: string;
-  generation_job_id: string;
-  image_url: string;
+  generation_job_id: string | null;
+  original_url: string;
+  edited_url: string | null;
   thumbnail_url: string | null;
+  halo_score: number | null;
+  vote_link_slug: string | null;
+  vote_count_total: number;
+  vote_count_positive: number;
+  preset_id: string | null;
+  resolution: string;
   is_favorite: boolean;
-  tags: string[];
-  metadata: Record<string, unknown>;
+  download_count: number;
+  public_share_slug: string | null;
+  share_enabled: boolean;
+  created_at: string;
+}
+
+export interface PhotoVote {
+  id: string;
+  user_id: string;
+  photo_a_url: string;
+  photo_b_url: string;
+  votes_a: number;
+  votes_b: number;
+  share_slug: string;
+  expires_at: string | null;
   created_at: string;
 }
 
 export interface StylePreset {
   id: string;
   name: string;
-  slug: string;
   description: string | null;
-  thumbnail_url: string;
+  category: string;
+  icon_emoji: string | null;
+  preview_images: string[];
   prompt_template: string;
   negative_prompt: string | null;
-  category: string;
-  is_premium: boolean;
+  style_config: Record<string, unknown>;
+  halo_pitch: string | null;
+  is_free: boolean;
+  is_active: boolean;
   sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NudgeMessage {
+  id: string;
+  message: string;
+  category: NudgeCategory;
+  target_tier: "free" | "pro" | "team" | "all" | null;
+  target_days_since_generation: number | null;
+  sent_count: number;
+  click_count: number;
+  conversion_count: number;
   is_active: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Team {
@@ -84,7 +171,12 @@ export interface Team {
   slug: string;
   owner_id: string;
   logo_url: string | null;
+  brand_colors: Record<string, string>;
+  brand_guidelines: string | null;
+  default_preset_id: string | null;
+  default_background: string | null;
   max_members: number;
+  stripe_subscription_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -94,8 +186,8 @@ export interface TeamMember {
   team_id: string;
   user_id: string;
   role: TeamRole;
-  invited_email: string | null;
-  invited_at: string | null;
+  invite_email: string | null;
+  invite_status: "pending" | "accepted" | "declined";
   joined_at: string | null;
   created_at: string;
 }
@@ -103,21 +195,27 @@ export interface TeamMember {
 export interface Waitlist {
   id: string;
   email: string;
+  name: string | null;
+  use_case: string | null;
+  current_photo_url: string | null;
+  halo_score: number | null;
   source: string | null;
-  referred_by: string | null;
-  position: number;
-  approved: boolean;
+  referral_code: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  status: "waiting" | "invited" | "converted";
   created_at: string;
 }
 
 export interface Feedback {
   id: string;
   user_id: string | null;
-  type: "bug" | "feature" | "general";
-  message: string;
+  type: "nps" | "bug" | "feature_request" | "quality_report" | "general";
   rating: number | null;
+  message: string | null;
+  generation_job_id: string | null;
   page_url: string | null;
-  metadata: Record<string, unknown>;
   created_at: string;
 }
 
@@ -125,33 +223,30 @@ export interface ReferralEvent {
   id: string;
   referrer_id: string;
   referred_id: string | null;
-  referral_code: string;
-  event_type: "click" | "signup" | "conversion";
+  referred_email: string | null;
+  event_type: "click" | "signup" | "trial" | "conversion";
   reward_granted: boolean;
   created_at: string;
 }
 
 export interface FeatureFlag {
   id: string;
-  key: string;
   description: string | null;
   enabled: boolean;
   rollout_percentage: number;
-  allowed_emails: string[];
-  metadata: Record<string, unknown>;
+  config: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
 
 export interface ABTest {
   id: string;
-  key: string;
   description: string | null;
   variants: Record<string, unknown>;
-  traffic_allocation: Record<string, number>;
-  is_active: boolean;
-  start_date: string | null;
-  end_date: string | null;
+  target_metric: string | null;
+  status: "draft" | "running" | "completed";
+  started_at: string | null;
+  ended_at: string | null;
   created_at: string;
 }
 
@@ -164,7 +259,8 @@ export interface AnalyticsEvent {
   page_url: string | null;
   referrer: string | null;
   user_agent: string | null;
-  ip_address: string | null;
+  ip_country: string | null;
+  ip_city: string | null;
   created_at: string;
 }
 
@@ -182,6 +278,11 @@ export interface Database {
         Insert: Omit<FaceProfile, "id" | "created_at" | "updated_at">;
         Update: Partial<FaceProfile>;
       };
+      halo_scores: {
+        Row: HaloScore;
+        Insert: Omit<HaloScore, "id" | "created_at">;
+        Update: Partial<HaloScore>;
+      };
       generation_jobs: {
         Row: GenerationJob;
         Insert: Omit<GenerationJob, "id" | "created_at">;
@@ -192,10 +293,20 @@ export interface Database {
         Insert: Omit<SavedHeadshot, "id" | "created_at">;
         Update: Partial<SavedHeadshot>;
       };
+      photo_votes: {
+        Row: PhotoVote;
+        Insert: Omit<PhotoVote, "id" | "created_at">;
+        Update: Partial<PhotoVote>;
+      };
       style_presets: {
         Row: StylePreset;
-        Insert: Omit<StylePreset, "id" | "created_at">;
+        Insert: Omit<StylePreset, "created_at" | "updated_at">;
         Update: Partial<StylePreset>;
+      };
+      nudge_messages: {
+        Row: NudgeMessage;
+        Insert: Omit<NudgeMessage, "id" | "created_at" | "updated_at">;
+        Update: Partial<NudgeMessage>;
       };
       teams: {
         Row: Team;
@@ -209,7 +320,7 @@ export interface Database {
       };
       waitlist: {
         Row: Waitlist;
-        Insert: Omit<Waitlist, "id" | "created_at" | "position">;
+        Insert: Omit<Waitlist, "id" | "created_at">;
         Update: Partial<Waitlist>;
       };
       feedback: {
@@ -224,12 +335,12 @@ export interface Database {
       };
       feature_flags: {
         Row: FeatureFlag;
-        Insert: Omit<FeatureFlag, "id" | "created_at" | "updated_at">;
+        Insert: Omit<FeatureFlag, "created_at" | "updated_at">;
         Update: Partial<FeatureFlag>;
       };
       ab_tests: {
         Row: ABTest;
-        Insert: Omit<ABTest, "id" | "created_at">;
+        Insert: Omit<ABTest, "created_at">;
         Update: Partial<ABTest>;
       };
       analytics_events: {
@@ -245,6 +356,8 @@ export interface Database {
       subscription_status: SubscriptionStatus;
       job_status: JobStatus;
       team_role: TeamRole;
+      nudge_category: NudgeCategory;
+      halo_score_source: HaloScoreSource;
     };
   };
 }

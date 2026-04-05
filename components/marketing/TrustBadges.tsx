@@ -1,13 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Users, Star, ShieldCheck, Clock } from "lucide-react";
+import { Users, Star, ShieldCheck, TrendingUp } from "lucide-react";
 
 const badges = [
   {
     icon: Users,
     label: "10,000+",
-    sublabel: "Professionals trust HaloShot",
+    sublabel: "Photos scored and improved",
+  },
+  {
+    icon: TrendingUp,
+    label: "+38 avg",
+    sublabel: "Halo Score improvement",
   },
   {
     icon: Star,
@@ -16,13 +21,8 @@ const badges = [
   },
   {
     icon: ShieldCheck,
-    label: "Encrypted",
-    sublabel: "Your data is secure (AES-256)",
-  },
-  {
-    icon: Clock,
-    label: "30 days",
-    sublabel: "Photos auto-deleted",
+    label: "AES-256",
+    sublabel: "Encrypted. Auto-deleted in 30 days.",
   },
 ];
 
@@ -38,7 +38,7 @@ export function TrustBadges() {
           transition={{ duration: 0.4, delay: i * 0.08 }}
           className="flex flex-col items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 text-center"
         >
-          <b.icon className="h-6 w-6 text-lime-400" />
+          <b.icon className="h-6 w-6 text-halo-400" />
           <p className="font-display text-lg font-bold">{b.label}</p>
           <p className="text-xs text-muted-foreground">{b.sublabel}</p>
         </motion.div>

@@ -21,88 +21,88 @@ const competitors: Record<string, CompetitorData> = {
   headshotpro: {
     name: "HeadshotPro",
     slug: "headshotpro",
-    tagline: "HeadshotPro is good. HaloShot is faster, cheaper, and more accurate.",
+    tagline: "HeadshotPro makes headshots. HaloShot tells you why yours isn\u2019t working \u2014 then fixes it in 60 seconds.",
     haloshotAdvantages: [
-      "60 seconds vs. 2 hours wait time",
-      "Free tier available (HeadshotPro starts at $29)",
-      "98% identity accuracy vs. 85%",
-      "Unlimited monthly refreshes on Pro",
-      "Mobile app for on-the-go generation",
+      "Your Halo Score: know exactly where your photo stands (HeadshotPro can\u2019t tell you)",
+      "60 seconds vs. 2 hours. Respect your own time.",
+      "Free tier available. HeadshotPro charges $29 before you see anything.",
+      "98% identity accuracy vs. 85%. It\u2019s you, not your approximate cousin.",
+      "Psychology-backed scoring on warmth, competence, and trustworthiness.",
     ],
     comparison: [
+      { feature: "Halo Score", haloshot: true, competitor: false },
       { feature: "Starting Price", haloshot: "Free", competitor: "$29" },
       { feature: "Generation Time", haloshot: "60 seconds", competitor: "2 hours" },
       { feature: "Identity Accuracy", haloshot: "98%", competitor: "85%" },
-      { feature: "Style Presets", haloshot: "30+", competitor: "15" },
-      { feature: "Mobile App", haloshot: true, competitor: false },
+      { feature: "Psychology-backed analysis", haloshot: true, competitor: false },
       { feature: "Unlimited Refreshes", haloshot: true, competitor: false },
-      { feature: "Background Removal", haloshot: true, competitor: true },
+      { feature: "Mobile App", haloshot: true, competitor: false },
       { feature: "Money-back Guarantee", haloshot: true, competitor: true },
       { feature: "Team Plans", haloshot: true, competitor: true },
       { feature: "API Access", haloshot: true, competitor: false },
     ],
     differentiators: [
-      { title: "Speed that respects your time", description: "HeadshotPro takes up to 2 hours. HaloShot delivers in 60 seconds. Because waiting for a photo shouldn&apos;t feel like waiting at the DMV." },
-      { title: "A face that&apos;s actually yours", description: "Our latest model preserves 98% of your unique facial features. HeadshotPro&apos;s results often look like a similar but different person." },
-      { title: "Free to start", description: "Try 3 headshots completely free. HeadshotPro charges $29 before you see a single result." },
+      { title: "They make headshots. We make first impressions.", description: "HeadshotPro gives you a photo and hopes you like it. HaloShot scores your current photo, shows you what\u2019s wrong, and generates one that\u2019s measurably better. That\u2019s not a feature gap. That\u2019s a category gap." },
+      { title: "2 hours is a long time to wonder.", description: "HeadshotPro takes up to 2 hours. That\u2019s long enough to forget you ordered it. HaloShot delivers in 60 seconds. Because your time has a Halo Score too." },
+      { title: "Free honesty. Paid glow-up.", description: "Score your photo for free. See where you actually stand. Then decide if you want the fix. HeadshotPro charges $29 before you see a single result." },
     ],
   },
   aragon: {
     name: "Aragon AI",
     slug: "aragon",
-    tagline: "Aragon AI takes 90 minutes and $39. HaloShot takes 60 seconds and $0 to start.",
+    tagline: "Aragon AI takes 90 minutes and $39. HaloShot takes 60 seconds and $0 to show you the truth.",
     haloshotAdvantages: [
-      "60 seconds vs. 90 minutes generation",
-      "Free tier vs. $39 starting price",
-      "98% identity accuracy vs. 82%",
-      "30+ style presets vs. 10",
-      "Mobile-native experience",
+      "Your Halo Score: the feedback Aragon can\u2019t give you",
+      "60 seconds vs. 90 minutes. Your lunch break thanks you.",
+      "Free tier vs. $39 starting price. Try before you buy.",
+      "98% identity accuracy vs. 82%. You should look like you.",
+      "Warmth + Competence breakdown on every photo.",
     ],
     comparison: [
+      { feature: "Halo Score", haloshot: true, competitor: false },
       { feature: "Starting Price", haloshot: "Free", competitor: "$39" },
       { feature: "Generation Time", haloshot: "60 seconds", competitor: "90 minutes" },
       { feature: "Identity Accuracy", haloshot: "98%", competitor: "82%" },
-      { feature: "Style Presets", haloshot: "30+", competitor: "10" },
-      { feature: "Mobile App", haloshot: true, competitor: false },
+      { feature: "Psychology-backed analysis", haloshot: true, competitor: false },
       { feature: "Unlimited Refreshes", haloshot: true, competitor: false },
-      { feature: "Background Removal", haloshot: true, competitor: true },
+      { feature: "Mobile App", haloshot: true, competitor: false },
       { feature: "Money-back Guarantee", haloshot: true, competitor: false },
       { feature: "Team Plans", haloshot: true, competitor: true },
       { feature: "Commercial License", haloshot: true, competitor: true },
     ],
     differentiators: [
-      { title: "Price that makes sense", description: "Aragon charges $39 for a fixed pack of headshots. HaloShot lets you start free and only pay $9.99/mo for 100 headshots." },
-      { title: "Real likeness, not a lookalike", description: "Aragon's 82% accuracy means your headshot might look like your cousin. HaloShot's 98% means it looks like you." },
-      { title: "No wait, no frustration", description: "90 minutes is a long time to wonder if your money was well spent. With HaloShot, you know in 60 seconds." },
+      { title: "82% accuracy means it looks like your sibling.", description: "Aragon\u2019s identity accuracy is the kind of number that sounds fine until you see the result. HaloShot\u2019s 98% means it looks like the you that showed up today." },
+      { title: "90 minutes of hope isn\u2019t a product.", description: "You submit your photos, you wait, you wonder. With HaloShot, you know in 60 seconds. No anxiety. No refreshing your inbox." },
+      { title: "$39 for a gamble. $0 for certainty.", description: "Aragon charges $39 for a fixed pack. HaloShot scores your photo for free and lets you decide. We earn your money. They require it upfront." },
     ],
   },
   betterpic: {
     name: "BetterPic",
     slug: "betterpic",
-    tagline: "BetterPic is decent for the price. HaloShot is better in every way that matters.",
+    tagline: "BetterPic is a fine name for a tool that doesn\u2019t tell you how much better your pic actually got.",
     haloshotAdvantages: [
-      "60 seconds vs. 1 hour generation",
+      "Your Halo Score: measurable improvement, not guesswork",
+      "60 seconds vs. 1 hour. Do the math.",
       "Free tier vs. $25 starting price",
-      "98% identity accuracy vs. 80%",
-      "Unlimited monthly refreshes on Pro",
-      "Mobile-first experience",
+      "98% identity accuracy vs. 80%. The gap is visible.",
+      "Psychology-backed warmth and competence analysis",
     ],
     comparison: [
+      { feature: "Halo Score", haloshot: true, competitor: false },
       { feature: "Starting Price", haloshot: "Free", competitor: "$25" },
       { feature: "Generation Time", haloshot: "60 seconds", competitor: "1 hour" },
       { feature: "Identity Accuracy", haloshot: "98%", competitor: "80%" },
-      { feature: "Style Presets", haloshot: "30+", competitor: "12" },
-      { feature: "Mobile App", haloshot: true, competitor: false },
+      { feature: "Psychology-backed analysis", haloshot: true, competitor: false },
       { feature: "Unlimited Refreshes", haloshot: true, competitor: false },
-      { feature: "Background Removal", haloshot: true, competitor: true },
+      { feature: "Mobile App", haloshot: true, competitor: false },
       { feature: "Money-back Guarantee", haloshot: true, competitor: true },
       { feature: "Team Plans", haloshot: true, competitor: false },
       { feature: "HD Resolution (2048px)", haloshot: true, competitor: false },
     ],
     differentiators: [
-      { title: "Quality gap is real", description: "BetterPic's 80% accuracy is the lowest among AI headshot tools. HaloShot's 98% is the highest. The difference is immediately visible." },
-      { title: "Speed matters", description: "An hour is too long to wait for headshots. HaloShot generates yours in 60 seconds." },
-      { title: "Built for teams too", description: "BetterPic is individual-only. HaloShot offers team plans with admin dashboards, consistent styling, and volume pricing." },
+      { title: "80% accuracy is 20% someone else.", description: "BetterPic has the lowest identity accuracy in the category. One in five details is wrong. HaloShot\u2019s 98% means two things are off, not twenty." },
+      { title: "Better than what?", description: "BetterPic doesn\u2019t score your before or after. You have no way to know how much better your pic actually got. HaloShot shows you the delta. Numbers don\u2019t lie." },
+      { title: "Teams need this too.", description: "BetterPic is individuals only. HaloShot offers team plans with admin dashboards, consistent styling, and the ability to score your entire team page at once." },
     ],
   },
 };
@@ -157,10 +157,10 @@ export default function CompetitorPage({
             className="mt-8"
           >
             <Link
-              href="/signup"
-              className="group inline-flex h-12 items-center gap-2 rounded-xl bg-lime-400 px-8 text-base font-semibold text-gray-900 transition-all hover:bg-lime-300"
+              href="/score"
+              className="group inline-flex h-12 items-center gap-2 rounded-xl bg-halo-500 px-8 text-base font-semibold text-gray-900 transition-all hover:bg-halo-400"
             >
-              Try HaloShot Free
+              Score your photo free
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </motion.div>
@@ -170,7 +170,7 @@ export default function CompetitorPage({
       {/* Key advantages */}
       <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
         <h2 className="mb-6 font-display text-2xl font-bold">
-          Why professionals switch to HaloShot
+          Why people switch to HaloShot
         </h2>
         <ul className="space-y-3">
           {data.haloshotAdvantages.map((adv) => (
@@ -185,7 +185,7 @@ export default function CompetitorPage({
       {/* Comparison table */}
       <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
         <h2 className="mb-8 text-center font-display text-2xl font-bold">
-          Feature-by-feature comparison
+          Feature-by-feature. No spin.
         </h2>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -197,7 +197,7 @@ export default function CompetitorPage({
             <thead>
               <tr className="border-b border-white/10">
                 <th className="pb-4 text-left text-sm font-medium text-muted-foreground">Feature</th>
-                <th className="pb-4 text-center text-sm font-semibold text-lime-400">HaloShot</th>
+                <th className="pb-4 text-center text-sm font-semibold text-halo-400">HaloShot</th>
                 <th className="pb-4 text-center text-sm font-medium text-muted-foreground">{data.name}</th>
               </tr>
             </thead>
