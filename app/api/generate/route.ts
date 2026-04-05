@@ -116,24 +116,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to create generation job" }, { status: 500 });
     }
 
-    // Run Replicate generation (synchronous — waits for result)
+    // Run Replicate generation with Flux Kontext (identity-preserving)
     try {
       const replicate = getReplicate();
-      const output = await replicate.run("black-forest-labs/flux-dev", {
-        input: {
-          prompt,
-          num_outputs: Math.min(numImages, 4),
-          guidance: 3.5,
-          num_inference_steps: 28,
-          output_format: "webp",
-          output_quality: 90,
-        },
-      });
+      const referencePhotoUrl = faceProfile.photo_urls?.[0];
 
-      // output is an array of FileOutput objects that stringify to URLs
-      const imageUrls = Array.isArray(output)
-        ? output.map((item) => String(item))
-        : [String(output)];
+      if (!referencePhotoUrl) {
+        return NextResponse.json({ error: "No reference photo found" }, { status: 400 });
+      }
+
+      // Generate multiple images by running Kontext multiple times
+      const batchSize = Math.min(numImages, 4);
+      const imageUrls: string[] = [];
+
+      const promises = Array.from({ length: batchSize }, (_, i) =>
+        replicate.run("black-forest-labs/flux-kontext-dev", {
+          input: {
+            prompt: `${prompt} Variation ${i + 1}, unique pose and expression.`,
+            input_image: referencePhotoUrl,
+            aspect_ratio: "3:4",
+            guidance: 3.5,
+            num_inference_steps: 28,
+            output_format: "webp",
+            output_quality: 90,
+            seed: Math.floor(Math.random() * 1000000) + i * 1000,
+          },
+        })
+      );
+
+      const results = await Promise.all(promises);
+      for (const output of results) {
+        imageUrls.push(String(output));
+      }
 
       // Update job as completed
       await supabase
