@@ -189,6 +189,9 @@ export function Sidebar() {
             </button>
           </div>
         )}
+        {!collapsed && (
+          <p className="px-3 pb-1 text-[10px] text-white/15">v0.4.1</p>
+        )}
       </div>
     </div>
   );
