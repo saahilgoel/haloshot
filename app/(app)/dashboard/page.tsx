@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -52,11 +53,15 @@ const mockActivePolls: Array<{
   leadPct: number;
 }> = [];
 
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+function useGreeting(): string {
+  const [greeting, setGreeting] = useState("Welcome back");
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting("Good morning");
+    else if (hour < 17) setGreeting("Good afternoon");
+    else setGreeting("Good evening");
+  }, []);
+  return greeting;
 }
 
 const stagger = {
@@ -69,6 +74,7 @@ const stagger = {
 };
 
 export default function DashboardPage() {
+  const greeting = useGreeting();
   const hasHeadshots = mockRecentHeadshots.length > 0;
   const hasScore = mockHaloScore !== null;
 
@@ -81,7 +87,7 @@ export default function DashboardPage() {
         transition={{ duration: 0.4 }}
       >
         <h1 className="font-display text-2xl font-bold sm:text-3xl">
-          {getGreeting()}, {mockUser.name}
+          {greeting}, {mockUser.name}
         </h1>
         <p className="mt-1 text-white/40">
           Here&apos;s how your first impression is performing.
