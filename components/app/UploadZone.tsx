@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Camera, X, CheckCircle, AlertCircle, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 interface UploadZoneProps {
   onUploadComplete: (urls: string[]) => void;
@@ -54,37 +55,47 @@ export function UploadZone({ onUploadComplete, maxFiles = 5 }: UploadZoneProps) 
     if (files.length === 0) return;
 
     setIsUploading(true);
-    const formData = new FormData();
-    files.forEach(f => formData.append("photos", f.file));
+    const supabase = createClient();
 
     try {
       setFiles(prev => prev.map(f => ({ ...f, status: "uploading" as const })));
 
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
-      const data = await res.json();
+      const uploadedUrls: string[] = [];
 
-      if (!res.ok) throw new Error(data.error);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i].file;
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-      setFiles(prev =>
-        prev.map((f, i) => ({
-          ...f,
-          status: "done" as const,
-          url: data.urls[i],
-        }))
-      );
+        const { error: uploadError } = await supabase.storage
+          .from("selfies")
+          .upload(path, file, { contentType: file.type, upsert: false });
 
-      onUploadComplete(data.urls);
+        if (uploadError) throw new Error(uploadError.message);
+
+        const { data: urlData } = supabase.storage
+          .from("selfies")
+          .getPublicUrl(path);
+
+        uploadedUrls.push(urlData.publicUrl);
+
+        // Update individual file status
+        setFiles(prev => prev.map((f, idx) =>
+          idx === i ? { ...f, status: "done" as const, url: urlData.publicUrl } : f
+        ));
+      }
+
+      onUploadComplete(uploadedUrls);
     } catch (error) {
       setFiles(prev =>
-        prev.map(f => ({
+        prev.map(f => f.status !== "done" ? ({
           ...f,
           status: "error" as const,
           error: error instanceof Error ? error.message : "Upload failed",
-        }))
+        }) : f)
       );
     } finally {
       setIsUploading(false);
@@ -132,10 +143,10 @@ export function UploadZone({ onUploadComplete, maxFiles = 5 }: UploadZoneProps) 
           </div>
           <div>
             <p className="text-lg font-medium text-white">
-              Drop your selfies here
+              Show us the real you.
             </p>
             <p className="text-sm text-white/50 mt-1">
-              or click to browse. JPG, PNG, or WebP up to 10MB.
+              Drag photos here, or click to browse. No filters needed.
             </p>
           </div>
           <div className="flex gap-2 mt-2">
@@ -177,10 +188,10 @@ export function UploadZone({ onUploadComplete, maxFiles = 5 }: UploadZoneProps) 
 
         {/* Upload guidelines */}
         <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-2 text-xs text-white/40">
-          <span className="flex items-center gap-1.5"><CheckCircle className="h-3 w-3 text-emerald-400" /> Look straight at camera</span>
-          <span className="flex items-center gap-1.5"><CheckCircle className="h-3 w-3 text-emerald-400" /> Good lighting</span>
-          <span className="flex items-center gap-1.5"><CheckCircle className="h-3 w-3 text-emerald-400" /> Clear face, no sunglasses</span>
-          <span className="flex items-center gap-1.5"><CheckCircle className="h-3 w-3 text-emerald-400" /> 1-5 photos</span>
+          <span className="flex items-center gap-1.5"><CheckCircle className="h-3 w-3 text-emerald-400" /> Eyes forward — they do 40% of the trust-building</span>
+          <span className="flex items-center gap-1.5"><CheckCircle className="h-3 w-3 text-emerald-400" /> Find some light. This isn&apos;t a speakeasy.</span>
+          <span className="flex items-center gap-1.5"><CheckCircle className="h-3 w-3 text-emerald-400" /> No shades — we need your actual eyes</span>
+          <span className="flex items-center gap-1.5"><CheckCircle className="h-3 w-3 text-emerald-400" /> 1-5 photos. More angles = better results.</span>
         </div>
       </motion.div>
 
