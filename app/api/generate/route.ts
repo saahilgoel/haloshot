@@ -66,25 +66,11 @@ export async function POST(req: NextRequest) {
       faceProfile = newFp;
     }
 
-    // Fire predictions asynchronously via Replicate HTTP API
-    const predictionIds: string[] = [];
-    const startTime = Date.now();
-    const TIMEOUT_BUDGET_MS = 8000; // Leave 2s buffer for Vercel 10s timeout
+    // Fire all predictions in parallel via Replicate HTTP API
+    const backgrounds = preset.styleConfig.backgrounds;
+    const outfits = preset.styleConfig.outfits;
 
-    for (let i = 0; i < totalImages; i++) {
-      // Check time budget
-      if (Date.now() - startTime > TIMEOUT_BUDGET_MS) {
-        console.warn(
-          `Time budget exceeded after ${i} predictions, stopping early`
-        );
-        break;
-      }
-
-      // Build editing prompt — for image-to-image models, the prompt should be
-      // a transformation instruction, NOT a full scene description.
-      // The model already sees the face from the reference image.
-      const backgrounds = preset.styleConfig.backgrounds;
-      const outfits = preset.styleConfig.outfits;
+    const predictionPromises = Array.from({ length: totalImages }, async (_, i) => {
       const bg = backgrounds[i % backgrounds.length].replace(/_/g, " ");
       const outfit = outfits[i % outfits.length].replace(/_/g, " ");
 
@@ -94,18 +80,16 @@ export async function POST(req: NextRequest) {
       let inputPayload: Record<string, unknown>;
 
       if (model === "studio") {
-        // Nano Banana 2
         apiUrl =
           "https://api.replicate.com/v1/models/google/nano-banana-2/predictions";
         inputPayload = {
           prompt,
-          image_input: photoUrls, // array of URLs for better identity
+          image_input: photoUrls,
           resolution: "2K",
           aspect_ratio: "3:4",
           output_format: "png",
         };
       } else {
-        // Flux Kontext Pro
         apiUrl =
           "https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions";
         inputPayload = {
@@ -134,22 +118,19 @@ export async function POST(req: NextRequest) {
         if (!res.ok) {
           const errText = await res.text();
           console.error(`Replicate error for prediction ${i}:`, errText);
-          // Continue with other predictions instead of failing entirely
-          continue;
+          return null;
         }
 
         const prediction = await res.json();
-        predictionIds.push(prediction.id);
+        return prediction.id as string;
       } catch (err) {
         console.error(`Failed to create prediction ${i}:`, err);
-        continue;
+        return null;
       }
+    });
 
-      // 2s delay between requests to avoid rate limits (skip after last)
-      if (i < totalImages - 1 && Date.now() - startTime < TIMEOUT_BUDGET_MS) {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-      }
-    }
+    const results = await Promise.all(predictionPromises);
+    const predictionIds = results.filter((id): id is string => id !== null);
 
     if (predictionIds.length === 0) {
       return NextResponse.json(
