@@ -13,7 +13,9 @@ import { SubscriptionGate } from "@/components/app/SubscriptionGate";
 import { UsageIndicator } from "@/components/app/UsageIndicator";
 import { useGeneration } from "@/lib/hooks/useGeneration";
 import { useSubscription } from "@/lib/hooks/useSubscription";
+import { useUser } from "@/lib/hooks/useUser";
 import { STYLE_PRESETS } from "@/lib/ai/prompts";
+import { ScoreReveal } from "@/components/app/ScoreReveal";
 import { cn } from "@/lib/utils";
 
 type Step = "upload" | "style" | "generating" | "results";
@@ -25,6 +27,8 @@ export default function GeneratePage() {
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [model, setModel] = useState<"studio" | "fast" | "quick">("studio");
   const [showPaywall, setShowPaywall] = useState(false);
+  const [avgScore, setAvgScore] = useState(0);
+  const { profile } = useUser();
 
   const { tier, isPro, isTeam } = useSubscription();
   const isProOrTeam = isPro || isTeam;
@@ -87,10 +91,39 @@ export default function GeneratePage() {
     });
   };
 
-  // When generation completes, move to results
+  // When generation completes, move to results and poll for scores
   if (isComplete && step === "generating") {
     setStep("results");
   }
+
+  // Poll for halo scores on results
+  useEffect(() => {
+    if (step !== "results" || !job?.id) return;
+
+    let attempts = 0;
+    const poll = setInterval(async () => {
+      attempts++;
+      if (attempts > 20) { clearInterval(poll); return; }
+
+      try {
+        const supabase = (await import("@/lib/supabase/client")).createClient();
+        const { data } = await supabase
+          .from("saved_headshots")
+          .select("halo_score")
+          .eq("generation_job_id", job.id)
+          .not("halo_score", "is", null);
+
+        if (data && data.length > 0) {
+          const scores = data.map(d => d.halo_score as number);
+          const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+          setAvgScore(avg);
+          clearInterval(poll);
+        }
+      } catch {}
+    }, 3000);
+
+    return () => clearInterval(poll);
+  }, [step, job?.id]);
 
   const selectedPresetData = selectedPreset
     ? STYLE_PRESETS[selectedPreset as keyof typeof STYLE_PRESETS]
@@ -355,14 +388,19 @@ export default function GeneratePage() {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <div>
+              <div className="text-center">
                 <h1 className="text-2xl font-display font-bold text-white">Your glow-up is ready.</h1>
-                <p className="text-white/50 mt-1">
-                  {generatedImages.length} of {job?.numImages || generatedImages.length} headshots generated
-                  {" with "}
-                  {model === "studio" ? "Studio Quality" : model === "fast" ? "Fast Mode" : "Flux"}.
-                  {!isProOrTeam && " Upgrade for watermark-free downloads."}
-                </p>
+                {avgScore > 0 ? (
+                  <ScoreReveal
+                    score={avgScore}
+                    bestScore={profile?.current_halo_score ?? undefined}
+                    presetName={selectedPresetData?.name}
+                  />
+                ) : (
+                  <p className="text-white/50 mt-1 text-sm">
+                    Scoring your headshots...
+                  </p>
+                )}
               </div>
 
               <HeadshotGrid
