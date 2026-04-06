@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { buildPrompt } from "@/lib/ai/prompts";
 import { STYLE_PRESETS } from "@/lib/ai/prompts";
+
+export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
   try {

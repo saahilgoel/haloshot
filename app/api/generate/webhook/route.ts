@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { analyzePhoto } from "@/lib/ai/halo-score";
 import sharp from "sharp";
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
