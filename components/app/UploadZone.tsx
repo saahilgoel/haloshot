@@ -186,14 +186,14 @@ export function UploadZone({ onUploadComplete, maxFiles = 5 }: UploadZoneProps) 
         </div>
       </div>
 
-      {/* Upload button */}
-      {hasFiles && (
+      {/* Upload button — hidden once all files are done */}
+      {hasFiles && !files.every(f => f.status === "done") && (
         <Button
           onClick={uploadFiles}
-          disabled={isUploading || files.every(f => f.status === "done")}
+          disabled={isUploading}
           className="w-full bg-violet-600 hover:bg-violet-700 h-10 text-sm font-medium"
         >
-          {isUploading ? "Uploading..." : files.every(f => f.status === "done") ? "Photos Uploaded ✓" : `Upload ${files.length} Photo${files.length > 1 ? "s" : ""}`}
+          {isUploading ? "Uploading..." : `Upload ${files.length} Photo${files.length > 1 ? "s" : ""}`}
         </Button>
       )}
     </div>

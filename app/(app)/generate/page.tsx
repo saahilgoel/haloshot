@@ -159,16 +159,21 @@ export default function GeneratePage() {
 
               <UploadZone onUploadComplete={handleUploadComplete} />
 
+              {uploadedUrls.length > 0 && !faceProfileId && (
+                <div className="flex items-center justify-center gap-3 h-11 rounded-md bg-violet-600/20 border border-violet-500/30 text-sm font-medium text-violet-300">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Analyzing your face...
+                </div>
+              )}
+
               {uploadedUrls.length > 0 && faceProfileId && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <Button
-                    onClick={() => setStep("style")}
-                    className="w-full h-11 bg-violet-600 hover:bg-violet-700 text-sm font-medium gap-2"
-                  >
-                    Pick Your First Impression
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </motion.div>
+                <Button
+                  onClick={() => setStep("style")}
+                  className="w-full h-11 bg-violet-600 hover:bg-violet-700 text-sm font-medium gap-2"
+                >
+                  Pick Your Style
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
               )}
             </motion.div>
           )}
