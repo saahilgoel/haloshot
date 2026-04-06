@@ -113,7 +113,7 @@ export default function DashboardPage() {
             <div className="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-halo/8 blur-3xl" />
             <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-violet-600/10 blur-3xl" />
 
-            <CardContent className="relative flex flex-col items-center gap-6 p-8 sm:flex-row sm:items-center sm:justify-between">
+            <CardContent className="relative flex flex-col items-center gap-4 p-4 sm:gap-6 sm:p-8 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-6">
                 {/* Score ring */}
                 <div className="relative">
@@ -183,7 +183,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
           {
             label: "Shots Generated",
@@ -311,13 +311,13 @@ export default function DashboardPage() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="aspect-[3/4] rounded-xl" />
             ))}
           </div>
         ) : hasHeadshots ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
             {recentHeadshots.slice(0, 8).map((headshot, i) => (
               <motion.div
                 key={headshot.id}
@@ -329,6 +329,7 @@ export default function DashboardPage() {
                 <Card className="group overflow-hidden border-white/5 bg-white/[0.02]">
                   <div className="relative aspect-[3/4] bg-secondary">
                     <img
+                      loading="lazy"
                       src={headshot.url}
                       alt="Headshot"
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"

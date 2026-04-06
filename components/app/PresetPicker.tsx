@@ -53,7 +53,7 @@ export function PresetPicker({ selectedPreset, onSelect, isPro }: PresetPickerPr
       </div>
 
       {/* Preset grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
         {filteredPresets.map((preset, index) => {
           const isLocked = !preset.isFree && !isPro;
           const isSelected = selectedPreset === preset.id;

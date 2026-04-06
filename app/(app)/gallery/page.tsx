@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import {
@@ -57,14 +56,6 @@ interface Headshot {
   date: string;
 }
 
-const fadeIn = {
-  hidden: { opacity: 0, y: 12 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.04, duration: 0.3, ease: "easeOut" as const },
-  }),
-};
 
 export default function GalleryPage() {
   const [sort, setSort] = useState<SortType>("newest");
@@ -188,7 +179,7 @@ export default function GalleryPage() {
 
       {/* Grid */}
       {loading ? (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="space-y-2">
               <Skeleton className="aspect-[3/4] rounded-xl" />
@@ -201,104 +192,98 @@ export default function GalleryPage() {
         </div>
       ) : hasHeadshots ? (
         <>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {filtered.map((headshot, i) => {
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {filtered.map((headshot) => {
               const isFav = headshot.isFavorite || favorites.has(headshot.id);
               const score = headshot.haloScore;
               const isHighScore = score && score >= 80;
 
               return (
-                <motion.div
+                <Card
                   key={headshot.id}
-                  custom={i}
-                  initial="hidden"
-                  animate="visible"
-                  variants={fadeIn}
-                  whileHover={{ y: -4 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+                  className={cn(
+                    "group overflow-hidden border-white/5 bg-white/[0.02] transition-all hover:-translate-y-1",
+                    isHighScore &&
+                      "border-halo/10 shadow-[0_0_20px_rgba(245,166,35,0.08)]"
+                  )}
                 >
-                  <Card
-                    className={cn(
-                      "group overflow-hidden border-white/5 bg-white/[0.02] transition-all",
-                      isHighScore &&
-                        "border-halo/10 shadow-[0_0_20px_rgba(245,166,35,0.08)]"
-                    )}
-                  >
-                    <div className="relative aspect-[3/4] overflow-hidden">
-                      <img
-                        src={headshot.url}
-                        alt="Headshot"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
+                  <div className="relative aspect-[3/4] overflow-hidden">
+                    <img
+                      src={headshot.url}
+                      alt="Headshot"
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
 
-                      {/* Halo Score badge */}
-                      {score && (
-                        <div
+                    {/* Halo Score badge */}
+                    {score && (
+                      <div
+                        className={cn(
+                          "absolute right-2 top-2 rounded-full px-2.5 py-1 text-xs font-bold backdrop-blur-sm transition-all",
+                          isHighScore
+                            ? "bg-halo/20 text-halo shadow-[0_0_16px_rgba(245,166,35,0.4)]"
+                            : score >= 60
+                              ? "bg-violet-500/20 text-violet-300"
+                              : "bg-white/10 text-white/50"
+                        )}
+                      >
+                        {score}
+                      </div>
+                    )}
+
+                    {/* Overlay actions — always visible on mobile */}
+                    <div className="absolute inset-0 flex flex-col justify-between bg-gradient-to-t from-black/70 via-transparent to-transparent p-2 sm:p-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => toggleFavorite(headshot.id)}
                           className={cn(
-                            "absolute right-2 top-2 rounded-full px-2.5 py-1 text-xs font-bold backdrop-blur-sm transition-all",
-                            isHighScore
-                              ? "bg-halo/20 text-halo shadow-[0_0_16px_rgba(245,166,35,0.4)]"
-                              : score >= 60
-                                ? "bg-violet-500/20 text-violet-300"
-                                : "bg-white/10 text-white/50"
+                            "flex h-8 w-8 items-center justify-center rounded-full transition-all",
+                            isFav
+                              ? "bg-rose-500 text-white"
+                              : "bg-black/30 text-white hover:bg-black/50"
                           )}
                         >
-                          {score}
-                        </div>
-                      )}
-
-                      {/* Overlay actions */}
-                      <div className="absolute inset-0 flex flex-col justify-between bg-gradient-to-t from-black/70 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                        <div className="flex justify-end">
-                          <button
-                            onClick={() => toggleFavorite(headshot.id)}
+                          <Heart
                             className={cn(
-                              "flex h-8 w-8 items-center justify-center rounded-full transition-all",
-                              isFav
-                                ? "bg-rose-500 text-white"
-                                : "bg-black/30 text-white hover:bg-black/50"
+                              "h-4 w-4",
+                              isFav && "fill-current"
                             )}
-                          >
-                            <Heart
-                              className={cn(
-                                "h-4 w-4",
-                                isFav && "fill-current"
-                              )}
-                            />
+                          />
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex gap-1.5">
+                          <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25">
+                            <Download className="h-3.5 w-3.5" />
                           </button>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex gap-1.5">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
                             <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25">
-                              <Share2 className="h-3.5 w-3.5" />
+                              <MoreHorizontal className="h-4 w-4" />
                             </button>
-                            <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25">
-                              <Download className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Edit3 className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-400">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Share2 className="mr-2 h-4 w-4" />
+                              Share
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Edit3 className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-400">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Info footer */}
-                    <div className="flex items-center justify-between p-3">
+                  {/* Info footer */}
+                  <div className="flex items-center justify-between p-2 sm:p-3">
                       <div>
                         <Badge
                           variant="secondary"
@@ -321,8 +306,7 @@ export default function GalleryPage() {
                         </span>
                       )}
                     </div>
-                  </Card>
-                </motion.div>
+                </Card>
               );
             })}
           </div>
@@ -334,12 +318,8 @@ export default function GalleryPage() {
           </div>
         </>
       ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <Card className="flex flex-col items-center justify-center border-dashed border-white/10 p-12 text-center">
+        <div>
+          <Card className="flex flex-col items-center justify-center border-dashed border-white/10 p-8 sm:p-12 text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-violet-500/10">
               <Camera className="h-8 w-8 text-violet-400" />
             </div>
@@ -357,7 +337,7 @@ export default function GalleryPage() {
               </Link>
             </Button>
           </Card>
-        </motion.div>
+        </div>
       )}
     </div>
   );

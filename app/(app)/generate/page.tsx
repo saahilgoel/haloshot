@@ -193,7 +193,7 @@ export default function GeneratePage() {
                   Back
                 </Button>
                 <div>
-                  <h1 className="text-2xl font-display font-bold text-white">What should your first impression say?</h1>
+                  <h1 className="text-lg sm:text-2xl font-display font-bold text-white">What should your first impression say?</h1>
                   <p className="text-white/50 mt-1">Pick a look. Each one is optimized for different perception dimensions.</p>
                 </div>
               </div>
@@ -212,7 +212,7 @@ export default function GeneratePage() {
                   className="space-y-3"
                 >
                   <h2 className="text-sm font-medium text-white/60 uppercase tracking-wider">Choose your engine</h2>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                     {([
                       {
                         id: "studio" as const,
