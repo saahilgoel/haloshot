@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Download, Heart, Share2, MoreHorizontal, Trash2, Edit3 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,7 +54,7 @@ export function HeadshotCard({
   });
 
   return (
-    <motion.div whileHover={{ y: -4 }} transition={{ type: "spring", stiffness: 300 }}>
+    <div className="transition-transform duration-200 hover:-translate-y-1">
       <Card className="group overflow-hidden bg-white/[0.03] border-white/10 hover:border-white/20 transition-all">
         {/* Image */}
         <div className="relative aspect-[3/4] overflow-hidden">
@@ -134,6 +133,6 @@ export function HeadshotCard({
           </DropdownMenu>
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }

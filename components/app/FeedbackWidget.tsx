@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -43,13 +42,10 @@ export function FeedbackWidget() {
         <MessageSquare className="h-5 w-5" />
       </button>
 
-      <AnimatePresence>
+      <>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-20 right-4 md:bottom-20 md:right-6 w-80 rounded-2xl bg-[#1a1025] border border-white/10 shadow-2xl z-50 overflow-hidden"
+          <div
+            className="fixed bottom-20 right-4 md:bottom-20 md:right-6 w-80 rounded-2xl bg-[#1a1025] border border-white/10 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/5">
@@ -127,9 +123,9 @@ export function FeedbackWidget() {
                 </Button>
               </div>
             )}
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </>
     </>
   );
 }

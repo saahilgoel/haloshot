@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { Sparkles, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -66,39 +65,27 @@ export function GenerationProgress({ status, presetName, numImages, modelName = 
 
   if (status === "completed") {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col items-center gap-4 py-8 text-center"
-      >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
-        >
+      <div className="flex flex-col items-center gap-4 py-8 text-center animate-in fade-in zoom-in-95 duration-300">
+        <div>
           <CheckCircle className="h-16 w-16 text-emerald-400" />
-        </motion.div>
+        </div>
         <div>
           <h3 className="text-xl font-display font-bold text-white">Your headshots are ready!</h3>
           <p className="text-white/50 mt-1">{numImages} headshots generated with {presetName}</p>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   if (status === "failed") {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex flex-col items-center gap-4 py-8 text-center"
-      >
+      <div className="flex flex-col items-center gap-4 py-8 text-center animate-in fade-in duration-300">
         <XCircle className="h-16 w-16 text-red-400" />
         <div>
           <h3 className="text-xl font-display font-bold text-white">Generation failed</h3>
           <p className="text-white/50 mt-1">Something went wrong. Please try again.</p>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
@@ -106,20 +93,12 @@ export function GenerationProgress({ status, presetName, numImages, modelName = 
     <div className="space-y-8 py-4">
       {/* Main animation */}
       <div className="flex flex-col items-center gap-6">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          className="relative"
-        >
+        <div className="relative animate-spin" style={{ animationDuration: "3s" }}>
           <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-violet-600 to-violet-400 flex items-center justify-center">
             <Sparkles className="h-10 w-10 text-white" />
           </div>
-          <motion.div
-            animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="absolute inset-0 rounded-3xl bg-violet-500/30 blur-xl"
-          />
-        </motion.div>
+          <div className="absolute inset-0 rounded-3xl bg-violet-500/30 blur-xl animate-pulse" />
+        </div>
 
         <div className="text-center">
           <h3 className="text-lg font-display font-bold text-white">
@@ -154,12 +133,10 @@ export function GenerationProgress({ status, presetName, numImages, modelName = 
       {/* Steps */}
       <div className="space-y-2">
         {steps.map((step, index) => (
-          <motion.div
+          <div
             key={step.key}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
             className={cn(
+              "animate-in fade-in slide-in-from-left-2 duration-300",
               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
               index < currentStepIndex
                 ? "text-emerald-400"
@@ -176,20 +153,17 @@ export function GenerationProgress({ status, presetName, numImages, modelName = 
               <div className="h-4 w-4 shrink-0 rounded-full border border-current" />
             )}
             {step.label}
-          </motion.div>
+          </div>
         ))}
       </div>
 
       {/* Rotating tips */}
-      <motion.div
+      <div
         key={tipIndex}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        className="text-center text-xs text-white/30 italic"
+        className="text-center text-xs text-white/30 italic animate-in fade-in duration-300"
       >
         {tips[tipIndex]}
-      </motion.div>
+      </div>
     </div>
   );
 }

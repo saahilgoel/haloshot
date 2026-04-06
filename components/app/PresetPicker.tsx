@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Lock, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -59,14 +58,11 @@ export function PresetPicker({ selectedPreset, onSelect, isPro }: PresetPickerPr
           const isSelected = selectedPreset === preset.id;
 
           return (
-            <motion.button
+            <button
               key={preset.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
               onClick={() => !isLocked && onSelect(preset.id)}
               className={cn(
-                "group relative flex flex-col rounded-2xl border p-4 text-left transition-all duration-300",
+                "group relative flex flex-col rounded-2xl border p-4 text-left transition-all duration-300 animate-in fade-in",
                 isSelected
                   ? "border-violet-500 bg-violet-500/10 ring-2 ring-violet-500/30"
                   : "border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]",
@@ -112,8 +108,7 @@ export function PresetPicker({ selectedPreset, onSelect, isPro }: PresetPickerPr
 
               {/* Selected indicator */}
               {isSelected && (
-                <motion.div
-                  layoutId="preset-selected"
+                <div
                   className="absolute -top-px -right-px -bottom-px -left-px rounded-2xl border-2 border-violet-500 pointer-events-none"
                 />
               )}
@@ -127,7 +122,7 @@ export function PresetPicker({ selectedPreset, onSelect, isPro }: PresetPickerPr
                   </Badge>
                 </div>
               )}
-            </motion.button>
+            </button>
           );
         })}
       </div>

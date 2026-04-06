@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Sparkles, Zap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UploadZone } from "@/components/app/UploadZone";
@@ -173,16 +172,9 @@ export default function GeneratePage() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-4">
-        <AnimatePresence mode="wait">
           {/* Step 1: Upload */}
           {step === "upload" && (
-            <motion.div
-              key="upload"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-4"
-            >
+            <div className="space-y-4 animate-in fade-in duration-300">
               <div>
                 <h1 className="text-xl font-display font-bold text-white">Let&apos;s see the real you.</h1>
                 <p className="text-sm text-white/50 mt-0.5">Upload 1-5 selfies. No filters — the AI needs your actual face.</p>
@@ -208,18 +200,12 @@ export default function GeneratePage() {
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               )}
-            </motion.div>
+            </div>
           )}
 
           {/* Step 2: Style Selection */}
           {step === "style" && (
-            <motion.div
-              key="style"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
+            <div className="space-y-6 animate-in fade-in duration-300">
               <div className="flex items-center gap-3">
                 <Button
                   variant="ghost"
@@ -244,11 +230,7 @@ export default function GeneratePage() {
 
               {/* Model Picker */}
               {selectedPreset && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-3"
-                >
+                <div className="space-y-3 animate-in fade-in duration-300">
                   <h2 className="text-sm font-medium text-white/60 uppercase tracking-wider">Choose your engine</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                     {([
@@ -309,15 +291,11 @@ export default function GeneratePage() {
                       );
                     })}
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {selectedPreset && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="sticky bottom-20 md:bottom-4"
-                >
+                <div className="sticky bottom-20 md:bottom-4 animate-in fade-in duration-300">
                   <Button
                     onClick={handleGenerate}
                     disabled={isGenerating}
@@ -326,20 +304,14 @@ export default function GeneratePage() {
                     <Sparkles className="h-5 w-5" />
                     Start My Glow-Up
                   </Button>
-                </motion.div>
+                </div>
               )}
-            </motion.div>
+            </div>
           )}
 
           {/* Step 3: Generating */}
           {step === "generating" && (
-            <motion.div
-              key="generating"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
+            <div className="space-y-6 animate-in fade-in duration-300">
               <GenerationProgress
                 status={job?.status || "queued"}
                 presetName={selectedPresetData?.name || ""}
@@ -350,11 +322,7 @@ export default function GeneratePage() {
 
               {/* Show images as they arrive */}
               {generatedImages.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-3"
-                >
+                <div className="space-y-3 animate-in fade-in duration-300">
                   <div className="flex items-center gap-2 text-sm text-white/60">
                     <Loader2 className="h-3 w-3 animate-spin" />
                     <span>{generatedImages.length} of {job?.numImages || 4} headshots ready...</span>
@@ -374,20 +342,14 @@ export default function GeneratePage() {
                       }
                     }}
                   />
-                </motion.div>
+                </div>
               )}
-            </motion.div>
+            </div>
           )}
 
           {/* Step 4: Results */}
           {step === "results" && (
-            <motion.div
-              key="results"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
+            <div className="space-y-6 animate-in fade-in duration-300">
               <div className="text-center">
                 <h1 className="text-2xl font-display font-bold text-white">Your glow-up is ready.</h1>
                 {avgScore > 0 ? (
@@ -446,9 +408,8 @@ export default function GeneratePage() {
                   View Gallery
                 </Button>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
       </div>
 
       {/* Paywall */}

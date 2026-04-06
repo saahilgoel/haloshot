@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Camera, X, CheckCircle, AlertCircle, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -109,14 +108,10 @@ export function UploadZone({ onUploadComplete, maxFiles = 5 }: UploadZoneProps) 
       >
         <div className="flex gap-3 items-start">
           {/* Photo previews */}
-          <AnimatePresence>
             {files.map((file, index) => (
-              <motion.div
+              <div
                 key={file.preview}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="relative h-20 w-20 shrink-0 rounded-xl overflow-hidden"
+                className="relative h-20 w-20 shrink-0 rounded-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
               >
                 <img src={file.preview} alt="" className="h-full w-full object-cover" />
                 {file.status === "uploading" && (
@@ -140,9 +135,8 @@ export function UploadZone({ onUploadComplete, maxFiles = 5 }: UploadZoneProps) 
                 >
                   <X className="h-3 w-3 text-white" />
                 </button>
-              </motion.div>
+              </div>
             ))}
-          </AnimatePresence>
 
           {/* Add more button (when files exist but not at max) */}
           {hasFiles && files.length < maxFiles && (

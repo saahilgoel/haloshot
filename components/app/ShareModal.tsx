@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, Copy, Check, MessageCircle, Twitter, Linkedin, Mail, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,21 +52,15 @@ export function ShareModal({ isOpen, onClose, imageUrl, shareUrl }: ShareModalPr
   ];
 
   return (
-    <AnimatePresence>
+    <>
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm"
+        <div
+          className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={onClose}
         >
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
+          <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-t-3xl md:rounded-3xl bg-[#1a1025] border border-white/10 p-6"
+            className="w-full max-w-md rounded-t-3xl md:rounded-3xl bg-[#1a1025] border border-white/10 p-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-display font-bold text-white">Share your headshot</h3>
@@ -120,9 +113,9 @@ export function ShareModal({ isOpen, onClose, imageUrl, shareUrl }: ShareModalPr
                 )}
               </Button>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
-    </AnimatePresence>
+    </>
   );
 }

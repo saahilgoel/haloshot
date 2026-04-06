@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import Link from "next/link";
 import {
   Sparkles,
@@ -33,15 +32,6 @@ function useGreeting(): string {
   }, []);
   return greeting;
 }
-
-const stagger = {
-  hidden: { opacity: 0, y: 14 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.08, duration: 0.4, ease: "easeOut" as const },
-  }),
-};
 
 interface RecentHeadshot {
   id: string;
@@ -92,21 +82,17 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Greeting */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
+      <div className="animate-in fade-in duration-400">
         <h1 className="font-display text-2xl font-bold sm:text-3xl">
           {greeting}, {displayName}
         </h1>
         <p className="mt-1 text-white/40">
           Here&apos;s how your first impression is performing.
         </p>
-      </motion.div>
+      </div>
 
       {/* Halo Score Hero */}
-      <motion.div custom={0} initial="hidden" animate="visible" variants={stagger}>
+      <div className="animate-in fade-in duration-300">
         {hasScore ? (
           <Card className="relative overflow-hidden border-halo/20">
             {/* Ambient glow */}
@@ -180,7 +166,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         )}
-      </motion.div>
+      </div>
 
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
@@ -206,12 +192,9 @@ export default function DashboardPage() {
         ].map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <motion.div
+            <div
               key={stat.label}
-              custom={i + 1}
-              initial="hidden"
-              animate="visible"
-              variants={stagger}
+              className="animate-in fade-in duration-300"
             >
               <Card className="border-white/5 bg-white/[0.02]">
                 <CardContent className="flex items-center gap-3 p-4">
@@ -226,13 +209,13 @@ export default function DashboardPage() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           );
         })}
       </div>
 
       {/* Quick Glow-Up CTA */}
-      <motion.div custom={4} initial="hidden" animate="visible" variants={stagger}>
+      <div className="animate-in fade-in duration-300">
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-violet-600 via-violet-700 to-violet-900 halo-glow-sm">
           {/* Golden glow accent */}
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-halo/15 blur-2xl" />
@@ -260,11 +243,11 @@ export default function DashboardPage() {
             </Button>
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
 
       {/* Help Me Pick CTA */}
       {hasHeadshots && (
-        <motion.div custom={5} initial="hidden" animate="visible" variants={stagger}>
+        <div className="animate-in fade-in duration-300">
           <Card className="border-dashed border-white/10 bg-white/[0.01]">
             <CardContent className="flex flex-col items-center gap-3 p-6 text-center sm:flex-row sm:text-left">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-violet-500/10">
@@ -291,7 +274,7 @@ export default function DashboardPage() {
               </Button>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       )}
 
       {/* Recent headshots */}
@@ -319,12 +302,9 @@ export default function DashboardPage() {
         ) : hasHeadshots ? (
           <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
             {recentHeadshots.slice(0, 8).map((headshot, i) => (
-              <motion.div
+              <div
                 key={headshot.id}
-                custom={i + 6}
-                initial="hidden"
-                animate="visible"
-                variants={stagger}
+                className="animate-in fade-in duration-300"
               >
                 <Card className="group overflow-hidden border-white/5 bg-white/[0.02]">
                   <div className="relative aspect-[3/4] bg-secondary">
@@ -358,11 +338,11 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
         ) : (
-          <motion.div custom={6} initial="hidden" animate="visible" variants={stagger}>
+          <div className="animate-in fade-in duration-300">
             <Card className="flex flex-col items-center justify-center border-dashed border-white/10 p-12 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-violet-500/10">
                 <Camera className="h-8 w-8 text-violet-400" />
@@ -383,7 +363,7 @@ export default function DashboardPage() {
                 </Link>
               </Button>
             </Card>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>

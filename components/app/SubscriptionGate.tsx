@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, X, Check, Zap, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,21 +51,15 @@ export function SubscriptionGate({ isOpen, onClose, trigger = "generation_limit"
   };
 
   return (
-    <AnimatePresence>
+    <>
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={onClose}
         >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          <div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-lg rounded-3xl bg-gradient-to-b from-[#1a1025] to-[#0d0a12] border border-white/10 overflow-hidden"
+            className="relative w-full max-w-lg rounded-3xl bg-gradient-to-b from-[#1a1025] to-[#0d0a12] border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200"
           >
             {/* Close button */}
             <button
@@ -165,9 +158,9 @@ export function SubscriptionGate({ isOpen, onClose, trigger = "generation_limit"
                 Cancel anytime. 7-day money-back guarantee.
               </p>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
-    </AnimatePresence>
+    </>
   );
 }
