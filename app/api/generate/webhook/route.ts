@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { uploadToR2 } from "@/lib/storage/r2";
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,9 +40,21 @@ export async function POST(req: NextRequest) {
         imageUrl = String(output);
       }
 
+      // Persist image to R2 so it doesn't expire
+      let permanentUrl = imageUrl;
+      try {
+        const imgRes = await fetch(imageUrl);
+        const buffer = Buffer.from(await imgRes.arrayBuffer());
+        const ext = imageUrl.includes(".webp") ? "webp" : "png";
+        const key = `headshots/${job.user_id}/${job.id}/${predictionId}.${ext}`;
+        permanentUrl = await uploadToR2(buffer, key, `image/${ext}`);
+      } catch (err) {
+        console.error("Failed to persist image to R2, using original URL:", err);
+      }
+
       // Append to existing generated images
       const existingUrls = job.generated_image_urls || [];
-      const updatedUrls = [...existingUrls, imageUrl];
+      const updatedUrls = [...existingUrls, permanentUrl];
 
       // Check if all predictions are done
       const totalPredictions = (job.replicate_prediction_id || "").split(",").length;
@@ -62,8 +75,8 @@ export async function POST(req: NextRequest) {
       await supabase.from("saved_headshots").insert({
         user_id: job.user_id,
         generation_job_id: job.id,
-        original_url: imageUrl,
-        thumbnail_url: imageUrl,
+        original_url: permanentUrl,
+        thumbnail_url: permanentUrl,
         preset_id: job.preset_id,
         resolution: "1024x1024",
       });
