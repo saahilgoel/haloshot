@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { analyzePhoto } from "@/lib/ai/halo-score";
-import sharp from "sharp";
 
 export const maxDuration = 60;
 
@@ -49,26 +48,42 @@ export async function POST(req: NextRequest) {
       try {
         const imgRes = await fetch(imageUrl);
         const buffer = Buffer.from(await imgRes.arrayBuffer());
-        const fullPath = `headshots/${job.user_id}/${job.id}/${predictionId}.webp`;
-        const thumbPath = `headshots/${job.user_id}/${job.id}/${predictionId}-thumb.webp`;
+        const ext = imageUrl.includes(".webp") ? "webp" : "png";
+        const fullPath = `headshots/${job.user_id}/${job.id}/${predictionId}.${ext}`;
 
-        // Convert to webp for smaller size
-        const fullWebp = await sharp(buffer).webp({ quality: 85 }).toBuffer();
-        const thumbWebp = await sharp(buffer).resize(400).webp({ quality: 75 }).toBuffer();
+        // Try to generate thumbnail with sharp (may not be available)
+        let thumbBuffer: Buffer | null = null;
+        try {
+          const sharpModule = await import("sharp");
+          const s = sharpModule.default;
+          thumbBuffer = await s(buffer).resize(400).webp({ quality: 75 }).toBuffer();
+        } catch {
+          console.log("Sharp not available, skipping thumbnail");
+        }
 
-        // Upload both in parallel
-        const [fullResult, thumbResult] = await Promise.all([
-          supabase.storage.from("generated").upload(fullPath, fullWebp, { contentType: "image/webp", upsert: true }),
-          supabase.storage.from("generated").upload(thumbPath, thumbWebp, { contentType: "image/webp", upsert: true }),
-        ]);
+        // Upload full size
+        const { error: fullErr } = await supabase.storage
+          .from("generated")
+          .upload(fullPath, buffer, { contentType: `image/${ext}`, upsert: true });
 
-        if (!fullResult.error) {
+        if (!fullErr) {
           permanentUrl = supabase.storage.from("generated").getPublicUrl(fullPath).data.publicUrl;
         }
-        if (!thumbResult.error) {
-          thumbnailUrl = supabase.storage.from("generated").getPublicUrl(thumbPath).data.publicUrl;
+
+        // Upload thumbnail if generated
+        if (thumbBuffer) {
+          const thumbPath = `headshots/${job.user_id}/${job.id}/${predictionId}-thumb.webp`;
+          const { error: thumbErr } = await supabase.storage
+            .from("generated")
+            .upload(thumbPath, thumbBuffer, { contentType: "image/webp", upsert: true });
+
+          if (!thumbErr) {
+            thumbnailUrl = supabase.storage.from("generated").getPublicUrl(thumbPath).data.publicUrl;
+          } else {
+            thumbnailUrl = permanentUrl;
+          }
         } else {
-          thumbnailUrl = permanentUrl; // fallback to full size
+          thumbnailUrl = permanentUrl;
         }
       } catch (err) {
         console.error("Failed to persist image to storage, using original URL:", err);
