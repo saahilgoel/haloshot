@@ -54,6 +54,7 @@ const stylePresets = [
 interface Headshot {
   id: string;
   url: string;
+  thumbnailUrl: string;
   preset: string;
   isFavorite: boolean;
   haloScore?: number;
@@ -71,6 +72,7 @@ export default function GalleryPage() {
   const [editingHeadshot, setEditingHeadshot] = useState<Headshot | null>(null);
   const [editPrompt, setEditPrompt] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchHeadshots() {
@@ -78,7 +80,7 @@ export default function GalleryPage() {
 
       const { data, error } = await supabase
         .from("saved_headshots")
-        .select("id, original_url, preset_id, is_favorite, halo_score, created_at")
+        .select("id, original_url, thumbnail_url, preset_id, is_favorite, halo_score, created_at")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -89,6 +91,7 @@ export default function GalleryPage() {
         setHeadshots(data.map(h => ({
           id: h.id,
           url: h.original_url,
+          thumbnailUrl: h.thumbnail_url || h.original_url,
           preset: h.preset_id || "Unknown",
           isFavorite: h.is_favorite || false,
           haloScore: h.halo_score ?? undefined,
@@ -236,9 +239,12 @@ export default function GalleryPage() {
                       "border-halo/10 shadow-[0_0_20px_rgba(245,166,35,0.08)]"
                   )}
                 >
-                  <div className="relative aspect-[3/4] overflow-hidden">
+                  <div
+                    className="relative aspect-[3/4] overflow-hidden cursor-pointer"
+                    onClick={() => setViewerIndex(filtered.indexOf(headshot))}
+                  >
                     <img
-                      src={headshot.url}
+                      src={headshot.thumbnailUrl}
                       alt="Headshot"
                       loading="lazy"
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -387,6 +393,122 @@ export default function GalleryPage() {
               </Link>
             </Button>
           </Card>
+        </div>
+      )}
+
+      {/* Fullscreen Viewer */}
+      {viewerIndex !== null && filtered[viewerIndex] && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col"
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft" && viewerIndex > 0) setViewerIndex(viewerIndex - 1);
+            if (e.key === "ArrowRight" && viewerIndex < filtered.length - 1) setViewerIndex(viewerIndex + 1);
+            if (e.key === "Escape") setViewerIndex(null);
+          }}
+          tabIndex={0}
+          ref={(el) => el?.focus()}
+        >
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-4 py-3 sm:px-6">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-white/50">{viewerIndex + 1} / {filtered.length}</span>
+              {filtered[viewerIndex].haloScore && (
+                <span className={cn(
+                  "text-sm font-bold",
+                  filtered[viewerIndex].haloScore! >= 85 ? "text-amber-400" :
+                  filtered[viewerIndex].haloScore! >= 70 ? "text-violet-400" : "text-white/40"
+                )}>
+                  {filtered[viewerIndex].haloScore} Halo
+                </span>
+              )}
+            </div>
+            <button onClick={() => setViewerIndex(null)} className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Image area with swipe */}
+          <div
+            className="flex-1 flex items-center justify-center px-4 relative overflow-hidden"
+            onTouchStart={(e) => {
+              const touch = e.touches[0];
+              (e.currentTarget as HTMLElement).dataset.touchX = String(touch.clientX);
+            }}
+            onTouchEnd={(e) => {
+              const startX = Number((e.currentTarget as HTMLElement).dataset.touchX || 0);
+              const endX = e.changedTouches[0].clientX;
+              const diff = startX - endX;
+              if (Math.abs(diff) > 60) {
+                if (diff > 0 && viewerIndex < filtered.length - 1) setViewerIndex(viewerIndex + 1);
+                if (diff < 0 && viewerIndex > 0) setViewerIndex(viewerIndex - 1);
+              }
+            }}
+          >
+            {/* Nav arrows (desktop) */}
+            {viewerIndex > 0 && (
+              <button
+                onClick={() => setViewerIndex(viewerIndex - 1)}
+                className="absolute left-2 sm:left-6 z-10 h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10"
+              >
+                <ChevronDown className="h-5 w-5 rotate-90" />
+              </button>
+            )}
+            {viewerIndex < filtered.length - 1 && (
+              <button
+                onClick={() => setViewerIndex(viewerIndex + 1)}
+                className="absolute right-2 sm:right-6 z-10 h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10"
+              >
+                <ChevronDown className="h-5 w-5 -rotate-90" />
+              </button>
+            )}
+
+            <img
+              src={filtered[viewerIndex].url}
+              alt="Headshot"
+              className="max-h-[80vh] max-w-full object-contain rounded-2xl"
+            />
+          </div>
+
+          {/* Bottom actions */}
+          <div className="flex items-center justify-center gap-3 px-4 py-4 pb-[env(safe-area-inset-bottom)]">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-white/10 gap-2"
+              onClick={() => {
+                const a = document.createElement("a");
+                a.href = filtered[viewerIndex].url;
+                a.download = `haloshot-${filtered[viewerIndex].preset}.webp`;
+                a.target = "_blank";
+                a.click();
+              }}
+            >
+              <Download className="h-4 w-4" />
+              Download
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-white/10 gap-2"
+              onClick={() => navigator.clipboard.writeText(filtered[viewerIndex].url)}
+            >
+              <Share2 className="h-4 w-4" />
+              Share
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-white/10 gap-2"
+              onClick={() => {
+                setEditingHeadshot(filtered[viewerIndex]);
+                setEditPrompt("");
+                setViewerIndex(null);
+              }}
+            >
+              <Edit3 className="h-4 w-4" />
+              Edit
+            </Button>
+          </div>
         </div>
       )}
 

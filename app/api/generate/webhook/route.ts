@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { analyzePhoto } from "@/lib/ai/halo-score";
+import sharp from "sharp";
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,31 +41,36 @@ export async function POST(req: NextRequest) {
         imageUrl = String(output);
       }
 
-      // Persist image to Supabase Storage so it doesn't expire
+      // Persist image to Supabase Storage — full size + thumbnail
       let permanentUrl = imageUrl;
+      let thumbnailUrl = imageUrl;
       try {
         const imgRes = await fetch(imageUrl);
         const buffer = Buffer.from(await imgRes.arrayBuffer());
-        const ext = imageUrl.includes(".webp") ? "webp" : "png";
-        const storagePath = `headshots/${job.user_id}/${job.id}/${predictionId}.${ext}`;
+        const fullPath = `headshots/${job.user_id}/${job.id}/${predictionId}.webp`;
+        const thumbPath = `headshots/${job.user_id}/${job.id}/${predictionId}-thumb.webp`;
 
-        const { error: uploadError } = await supabase.storage
-          .from("generated")
-          .upload(storagePath, buffer, {
-            contentType: `image/${ext}`,
-            upsert: true,
-          });
+        // Convert to webp for smaller size
+        const fullWebp = await sharp(buffer).webp({ quality: 85 }).toBuffer();
+        const thumbWebp = await sharp(buffer).resize(400).webp({ quality: 75 }).toBuffer();
 
-        if (uploadError) {
-          console.error("Storage upload error:", uploadError);
+        // Upload both in parallel
+        const [fullResult, thumbResult] = await Promise.all([
+          supabase.storage.from("generated").upload(fullPath, fullWebp, { contentType: "image/webp", upsert: true }),
+          supabase.storage.from("generated").upload(thumbPath, thumbWebp, { contentType: "image/webp", upsert: true }),
+        ]);
+
+        if (!fullResult.error) {
+          permanentUrl = supabase.storage.from("generated").getPublicUrl(fullPath).data.publicUrl;
+        }
+        if (!thumbResult.error) {
+          thumbnailUrl = supabase.storage.from("generated").getPublicUrl(thumbPath).data.publicUrl;
         } else {
-          const { data: urlData } = supabase.storage
-            .from("generated")
-            .getPublicUrl(storagePath);
-          permanentUrl = urlData.publicUrl;
+          thumbnailUrl = permanentUrl; // fallback to full size
         }
       } catch (err) {
         console.error("Failed to persist image to storage, using original URL:", err);
+        thumbnailUrl = permanentUrl;
       }
 
       // Append to existing generated images
@@ -91,7 +97,7 @@ export async function POST(req: NextRequest) {
         user_id: job.user_id,
         generation_job_id: job.id,
         original_url: permanentUrl,
-        thumbnail_url: permanentUrl,
+        thumbnail_url: thumbnailUrl,
         preset_id: job.preset_id,
         resolution: "1024x1024",
       }).select("id").single();
