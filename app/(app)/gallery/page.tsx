@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Heart,
   Download,
@@ -15,7 +16,10 @@ import {
   Trash2,
   Edit3,
   ChevronDown,
+  X,
+  Loader2,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,23 +62,23 @@ interface Headshot {
 
 
 export default function GalleryPage() {
+  const router = useRouter();
   const [sort, setSort] = useState<SortType>("newest");
   const [styleFilter, setStyleFilter] = useState("All");
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [headshots, setHeadshots] = useState<Headshot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingHeadshot, setEditingHeadshot] = useState<Headshot | null>(null);
+  const [editPrompt, setEditPrompt] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     async function fetchHeadshots() {
       const supabase = createClient();
 
-      // Debug: check auth
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log("Gallery auth user:", user?.id || "NOT AUTHENTICATED");
-
       const { data, error } = await supabase
         .from("saved_headshots")
-        .select("id, original_url, preset_id, is_favorite, created_at")
+        .select("id, original_url, preset_id, is_favorite, halo_score, created_at")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -87,7 +91,7 @@ export default function GalleryPage() {
           url: h.original_url,
           preset: h.preset_id || "Unknown",
           isFavorite: h.is_favorite || false,
-          haloScore: undefined,
+          haloScore: h.halo_score ?? undefined,
           date: new Date(h.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
         })));
       }
@@ -103,6 +107,31 @@ export default function GalleryPage() {
       else next.add(id);
       return next;
     });
+  };
+
+  const handleEdit = async () => {
+    if (!editingHeadshot || !editPrompt.trim()) return;
+    setIsEditing(true);
+    try {
+      const res = await fetch("/api/edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageUrl: editingHeadshot.url,
+          prompt: editPrompt,
+          headshotId: editingHeadshot.id,
+        }),
+      });
+      if (res.ok) {
+        setEditingHeadshot(null);
+        setEditPrompt("");
+        router.push("/generate");
+      }
+    } catch (err) {
+      console.error("Edit failed:", err);
+    } finally {
+      setIsEditing(false);
+    }
   };
 
   const filtered = headshots
@@ -253,7 +282,16 @@ export default function GalleryPage() {
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex gap-1.5">
-                          <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25">
+                          <button
+                            onClick={() => {
+                              const a = document.createElement("a");
+                              a.href = headshot.url;
+                              a.download = `haloshot-${headshot.preset}.png`;
+                              a.target = "_blank";
+                              a.click();
+                            }}
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25"
+                          >
                             <Download className="h-3.5 w-3.5" />
                           </button>
                         </div>
@@ -264,15 +302,27 @@ export default function GalleryPage() {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              navigator.clipboard.writeText(headshot.url);
+                            }}>
                               <Share2 className="mr-2 h-4 w-4" />
-                              Share
+                              Copy Link
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              setEditingHeadshot(headshot);
+                              setEditPrompt("");
+                            }}>
                               <Edit3 className="mr-2 h-4 w-4" />
-                              Edit
+                              Edit with Prompt
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-400">
+                            <DropdownMenuItem
+                              className="text-red-400"
+                              onClick={async () => {
+                                const supabase = createClient();
+                                await supabase.from("saved_headshots").delete().eq("id", headshot.id);
+                                setHeadshots(prev => prev.filter(h => h.id !== headshot.id));
+                              }}
+                            >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
                             </DropdownMenuItem>
@@ -337,6 +387,48 @@ export default function GalleryPage() {
               </Link>
             </Button>
           </Card>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingHeadshot && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setEditingHeadshot(null)}>
+          <div className="bg-card border border-white/10 rounded-2xl max-w-lg w-full p-6 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-display font-bold text-lg">Edit Headshot</h3>
+              <button onClick={() => setEditingHeadshot(null)} className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex gap-4">
+              <img src={editingHeadshot.url} alt="Current" className="h-32 w-24 rounded-xl object-cover" />
+              <div className="flex-1 space-y-3">
+                <p className="text-sm text-white/50">Describe what you want to change. The AI will re-generate from this image.</p>
+                <Input
+                  placeholder="e.g. Make the background a modern office, add a blazer"
+                  value={editPrompt}
+                  onChange={e => setEditPrompt(e.target.value)}
+                  className="bg-white/5 border-white/10"
+                  onKeyDown={e => { if (e.key === "Enter" && editPrompt.trim()) handleEdit(); }}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setEditingHeadshot(null)} className="border-white/10">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEdit}
+                disabled={!editPrompt.trim() || isEditing}
+                className="bg-violet-600 hover:bg-violet-700 gap-2"
+              >
+                {isEditing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Edit3 className="h-4 w-4" />}
+                {isEditing ? "Generating..." : "Re-generate"}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

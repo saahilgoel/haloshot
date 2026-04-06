@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import Replicate from "replicate";
-
-const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,76 +10,54 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check pro subscription
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("subscription_tier")
-      .eq("id", user.id)
-      .single();
+    const { imageUrl, prompt, headshotId } = await req.json();
 
-    if (profile?.subscription_tier === "free") {
-      return NextResponse.json({ error: "Editor requires Pro subscription" }, { status: 403 });
+    if (!imageUrl || !prompt) {
+      return NextResponse.json({ error: "Image URL and prompt required" }, { status: 400 });
     }
 
-    const { imageUrl, editType, editParams } = await req.json();
-
-    if (!imageUrl || !editType) {
-      return NextResponse.json({ error: "Image URL and edit type required" }, { status: 400 });
-    }
-
-    let prediction;
-
-    switch (editType) {
-      case "background_swap": {
-        prediction = await replicate.predictions.create({
-          model: "cjwbw/rembg",
-          input: { image: imageUrl },
-        });
-        break;
-      }
-
-      case "upscale": {
-        prediction = await replicate.predictions.create({
-          model: "nightmareai/real-esrgan",
+    // Use Flux Kontext Pro for prompt-based editing (fast, good at edits)
+    const res = await fetch(
+      "https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           input: {
-            image: imageUrl,
-            scale: editParams?.scale || 4,
-            face_enhance: true,
+            prompt: `${prompt}. Keep the person's face and identity exactly the same. Professional quality.`,
+            input_image: imageUrl,
+            aspect_ratio: "3:4",
+            output_format: "webp",
+            output_quality: 90,
           },
-        });
-        break;
+          webhook: `https://haloshot.com/api/generate/webhook`,
+          webhook_events_filter: ["completed"],
+        }),
       }
+    );
 
-      case "relight": {
-        prediction = await replicate.predictions.create({
-          model: "black-forest-labs/flux-dev",
-          input: {
-            prompt: `${editParams?.prompt || "Professional headshot with"} ${editParams?.lighting || "soft studio lighting"}`,
-            image: imageUrl,
-            guidance_scale: 3.5,
-          },
-        });
-        break;
-      }
-
-      default:
-        return NextResponse.json({ error: "Unknown edit type" }, { status: 400 });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error("Replicate edit error:", errText);
+      return NextResponse.json({ error: "Failed to start edit" }, { status: 500 });
     }
 
-    // Poll for result (simple implementation)
-    let result = prediction;
-    while (result.status !== "succeeded" && result.status !== "failed") {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      result = await replicate.predictions.get(result.id);
-    }
+    const prediction = await res.json();
 
-    if (result.status === "failed") {
-      return NextResponse.json({ error: "Edit failed" }, { status: 500 });
-    }
+    // Create a job so the webhook can find it
+    await supabase.from("generation_jobs").insert({
+      user_id: user.id,
+      preset_id: "edit",
+      num_images: 1,
+      status: "processing",
+      replicate_prediction_id: prediction.id,
+      model_version: "flux-kontext-pro-edit",
+    });
 
-    const outputUrl = Array.isArray(result.output) ? result.output[0] : result.output;
-
-    return NextResponse.json({ editedUrl: outputUrl });
+    return NextResponse.json({ ok: true, predictionId: prediction.id });
   } catch (error) {
     console.error("Edit error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
