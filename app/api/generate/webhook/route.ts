@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { uploadToR2 } from "@/lib/storage/r2";
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,16 +39,31 @@ export async function POST(req: NextRequest) {
         imageUrl = String(output);
       }
 
-      // Persist image to R2 so it doesn't expire
+      // Persist image to Supabase Storage so it doesn't expire
       let permanentUrl = imageUrl;
       try {
         const imgRes = await fetch(imageUrl);
         const buffer = Buffer.from(await imgRes.arrayBuffer());
         const ext = imageUrl.includes(".webp") ? "webp" : "png";
-        const key = `headshots/${job.user_id}/${job.id}/${predictionId}.${ext}`;
-        permanentUrl = await uploadToR2(buffer, key, `image/${ext}`);
+        const storagePath = `headshots/${job.user_id}/${job.id}/${predictionId}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("generated")
+          .upload(storagePath, buffer, {
+            contentType: `image/${ext}`,
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error("Storage upload error:", uploadError);
+        } else {
+          const { data: urlData } = supabase.storage
+            .from("generated")
+            .getPublicUrl(storagePath);
+          permanentUrl = urlData.publicUrl;
+        }
       } catch (err) {
-        console.error("Failed to persist image to R2, using original URL:", err);
+        console.error("Failed to persist image to storage, using original URL:", err);
       }
 
       // Append to existing generated images
