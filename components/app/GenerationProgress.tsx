@@ -10,7 +10,7 @@ interface GenerationProgressProps {
   status: "queued" | "processing" | "completed" | "failed" | "canceled";
   presetName: string;
   numImages: number;
-  modelName?: "studio" | "quick";
+  modelName?: "studio" | "fast" | "quick";
   completedCount?: number;
 }
 
@@ -126,7 +126,7 @@ export function GenerationProgress({ status, presetName, numImages, modelName = 
             Creating your {presetName} headshots
           </h3>
           <p className="text-sm text-violet-400 mt-1 font-medium">
-            Generating with {modelName === "studio" ? "Studio Quality" : "Quick Shot"}
+            Generating with {modelName === "studio" ? "Studio Quality" : modelName === "fast" ? "Fast Mode" : "Flux"}
           </p>
           <p className="text-sm text-white/40 mt-0.5">
             {completedCount > 0
@@ -135,6 +135,8 @@ export function GenerationProgress({ status, presetName, numImages, modelName = 
             {" \u2014 "}
             {modelName === "studio"
               ? "Usually takes 2-5 minutes for all shots"
+              : modelName === "fast"
+              ? "Usually takes 1-2 minutes"
               : "Usually takes 30-90 seconds"}
           </p>
         </div>

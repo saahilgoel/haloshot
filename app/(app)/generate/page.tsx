@@ -23,7 +23,7 @@ export default function GeneratePage() {
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
   const [faceProfileId, setFaceProfileId] = useState<string | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
-  const [model, setModel] = useState<"studio" | "quick">("studio");
+  const [model, setModel] = useState<"studio" | "fast" | "quick">("studio");
   const [showPaywall, setShowPaywall] = useState(false);
 
   const { tier, isPro, isTeam } = useSubscription();
@@ -212,47 +212,64 @@ export default function GeneratePage() {
                   className="space-y-3"
                 >
                   <h2 className="text-sm font-medium text-white/60 uppercase tracking-wider">Choose your engine</h2>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={() => setModel("studio")}
-                      className={cn(
-                        "relative rounded-2xl border-2 p-4 text-left transition-all",
-                        model === "studio"
-                          ? "border-amber-500/70 bg-amber-500/10"
-                          : "border-white/10 bg-white/5 hover:border-white/20"
-                      )}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="h-5 w-5 text-amber-400" />
-                        <span className="font-semibold text-white text-sm">Studio Quality</span>
-                      </div>
-                      <p className="text-xs text-white/50 leading-relaxed">
-                        2K resolution. Best identity match. Takes 45-60s per shot.
-                      </p>
-                      {model === "studio" && (
-                        <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-amber-400" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => setModel("quick")}
-                      className={cn(
-                        "relative rounded-2xl border-2 p-4 text-left transition-all",
-                        model === "quick"
-                          ? "border-violet-500/70 bg-violet-500/10"
-                          : "border-white/10 bg-white/5 hover:border-white/20"
-                      )}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Zap className="h-5 w-5 text-violet-400" />
-                        <span className="font-semibold text-white text-sm">Quick Shot</span>
-                      </div>
-                      <p className="text-xs text-white/50 leading-relaxed">
-                        Fast results in ~5 seconds. Good for previewing styles.
-                      </p>
-                      {model === "quick" && (
-                        <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-violet-400" />
-                      )}
-                    </button>
+                  <div className="grid grid-cols-3 gap-3">
+                    {([
+                      {
+                        id: "studio" as const,
+                        label: "Studio",
+                        desc: "2K res. Best identity match. ~60s.",
+                        cost: "~₹8.50/shot",
+                        icon: Sparkles,
+                        color: "amber",
+                      },
+                      {
+                        id: "fast" as const,
+                        label: "Fast",
+                        desc: "Good quality. Cheaper. ~30s.",
+                        cost: "~₹4/shot",
+                        icon: Zap,
+                        color: "violet",
+                      },
+                      {
+                        id: "quick" as const,
+                        label: "Flux",
+                        desc: "Different aesthetic. ~5s.",
+                        cost: "~₹5/shot",
+                        icon: Zap,
+                        color: "cyan",
+                      },
+                    ]).map((m) => {
+                      const Icon = m.icon;
+                      const isSelected = model === m.id;
+                      const borderColor = isSelected
+                        ? m.color === "amber" ? "border-amber-500/70 bg-amber-500/10"
+                        : m.color === "violet" ? "border-violet-500/70 bg-violet-500/10"
+                        : "border-cyan-500/70 bg-cyan-500/10"
+                        : "border-white/10 bg-white/5 hover:border-white/20";
+                      const dotColor = m.color === "amber" ? "bg-amber-400" : m.color === "violet" ? "bg-violet-400" : "bg-cyan-400";
+                      const iconColor = m.color === "amber" ? "text-amber-400" : m.color === "violet" ? "text-violet-400" : "text-cyan-400";
+
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => setModel(m.id)}
+                          className={cn(
+                            "relative rounded-2xl border-2 p-4 text-left transition-all",
+                            borderColor
+                          )}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <Icon className={cn("h-5 w-5", iconColor)} />
+                            <span className="font-semibold text-white text-sm">{m.label}</span>
+                          </div>
+                          <p className="text-xs text-white/50 leading-relaxed">{m.desc}</p>
+                          <p className="text-[10px] text-white/30 mt-1">{m.cost}</p>
+                          {isSelected && (
+                            <div className={cn("absolute top-2 right-2 h-2 w-2 rounded-full", dotColor)} />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </motion.div>
               )}
@@ -307,9 +324,9 @@ export default function GeneratePage() {
                   <HeadshotGrid
                     images={generatedImages}
                     similarityScores={similarityScores}
-                    isFreeUser={!isPro}
+                    isFreeUser={!isProOrTeam}
                     onDownload={(url) => {
-                      if (!isPro) {
+                      if (!isProOrTeam) {
                         setShowPaywall(true);
                       } else {
                         const a = document.createElement("a");
@@ -338,17 +355,17 @@ export default function GeneratePage() {
                 <p className="text-white/50 mt-1">
                   {generatedImages.length} of {job?.numImages || generatedImages.length} headshots generated
                   {" with "}
-                  {model === "studio" ? "Studio Quality" : "Quick Shot"}.
-                  {!isPro && " Upgrade for watermark-free downloads."}
+                  {model === "studio" ? "Studio Quality" : model === "fast" ? "Fast Mode" : "Flux"}.
+                  {!isProOrTeam && " Upgrade for watermark-free downloads."}
                 </p>
               </div>
 
               <HeadshotGrid
                 images={generatedImages}
                 similarityScores={similarityScores}
-                isFreeUser={!isPro}
+                isFreeUser={!isProOrTeam}
                 onDownload={(url) => {
-                  if (!isPro) {
+                  if (!isProOrTeam) {
                     setShowPaywall(true);
                   } else {
                     const a = document.createElement("a");

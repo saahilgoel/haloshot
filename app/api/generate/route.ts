@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No photo provided" }, { status: 400 });
     }
 
-    if (model !== "studio" && model !== "quick") {
+    if (model !== "studio" && model !== "fast" && model !== "quick") {
       return NextResponse.json({ error: "Invalid model" }, { status: 400 });
     }
 
@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
       let inputPayload: Record<string, unknown>;
 
       if (model === "studio") {
+        // Nano Banana 2 — best quality, 2K
         apiUrl =
           "https://api.replicate.com/v1/models/google/nano-banana-2/predictions";
         inputPayload = {
@@ -89,7 +90,18 @@ export async function POST(req: NextRequest) {
           aspect_ratio: "3:4",
           output_format: "png",
         };
+      } else if (model === "fast") {
+        // Nano Banana 1 — cheaper, still good
+        apiUrl =
+          "https://api.replicate.com/v1/models/google/nano-banana/predictions";
+        inputPayload = {
+          prompt,
+          image_input: photoUrls,
+          aspect_ratio: "3:4",
+          output_format: "png",
+        };
       } else {
+        // Flux Kontext Pro — different aesthetic
         apiUrl =
           "https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions";
         inputPayload = {
@@ -140,7 +152,7 @@ export async function POST(req: NextRequest) {
     }
 
     const modelVersion =
-      model === "studio" ? "nano-banana-2" : "flux-kontext-pro";
+      model === "studio" ? "nano-banana-2" : model === "fast" ? "nano-banana" : "flux-kontext-pro";
 
     // Create job record with all prediction IDs
     const { data: job } = await supabase
