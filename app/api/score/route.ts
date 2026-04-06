@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { analyzePhoto, HaloScoreResult } from "@/lib/ai/halo-score";
 import { createClient } from "@/lib/supabase/server";
 
+export const maxDuration = 30;
+
 const FREE_DAILY_LIMIT = 3;
 
 export async function POST(req: NextRequest) {

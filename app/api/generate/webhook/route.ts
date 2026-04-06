@@ -147,10 +147,31 @@ export async function POST(req: NextRequest) {
           .eq("id", job.user_id);
       }
     } else if (status === "failed") {
-      // Check if ALL predictions failed
-      const existingUrls = job.generated_image_urls || [];
-      if (existingUrls.length > 0) {
-        // Some succeeded — mark as completed with partial results
+      // Re-read job to get latest state (other webhooks may have succeeded)
+      const { data: freshJob } = await supabase
+        .from("generation_jobs")
+        .select("generated_image_urls, replicate_prediction_id, status")
+        .eq("id", job.id)
+        .single();
+
+      const currentUrls = freshJob?.generated_image_urls || [];
+      const totalPredictions = (freshJob?.replicate_prediction_id || "").split(",").length;
+
+      // Count how many webhooks we've processed (successes + this failure)
+      // Only mark as failed/completed when we've heard back from enough predictions
+      // Store error but don't mark failed yet — more successes may arrive
+      await supabase
+        .from("generation_jobs")
+        .update({
+          error_message: predictionError || "Some predictions failed",
+        })
+        .eq("id", job.id)
+        .eq("status", "processing"); // only update if still processing
+
+      // If we have some results and job is still processing, give it 30s
+      // before marking complete. For now, if we have results, mark completed.
+      if (currentUrls.length > 0 && freshJob?.status === "processing") {
+        // We have some results — mark as completed with partial results
         await supabase
           .from("generation_jobs")
           .update({
@@ -158,15 +179,23 @@ export async function POST(req: NextRequest) {
             completed_at: new Date().toISOString(),
           })
           .eq("id", job.id);
-      } else {
-        await supabase
-          .from("generation_jobs")
-          .update({
-            status: "failed",
-            error_message: predictionError || "Generation failed",
-            completed_at: new Date().toISOString(),
-          })
-          .eq("id", job.id);
+      }
+      // If no results at all AND this is likely the last webhook, mark failed
+      if (currentUrls.length === 0) {
+        // Wait — don't immediately fail. Other predictions might still succeed.
+        // Only fail if we've waited a reasonable time (job created > 2 min ago)
+        const jobAge = Date.now() - new Date(job.created_at).getTime();
+        if (jobAge > 120000) {
+          await supabase
+            .from("generation_jobs")
+            .update({
+              status: "failed",
+              error_message: predictionError || "Generation failed",
+              completed_at: new Date().toISOString(),
+            })
+            .eq("id", job.id)
+            .eq("status", "processing");
+        }
       }
     }
 
