@@ -145,15 +145,51 @@ export async function POST(req: NextRequest) {
     const results = await Promise.all(predictionPromises);
     const predictionIds = results.filter((id): id is string => id !== null);
 
+    // If primary model failed, fall back to Flux Kontext Pro
+    let actualModel = model;
+    if (predictionIds.length === 0 && model !== "quick") {
+      console.log(`Primary model failed, falling back to Flux Kontext Pro`);
+      const fallbackPromises = Array.from({ length: Math.min(totalImages, 4) }, async (_, i) => {
+        const bg = backgrounds[i % backgrounds.length].replace(/_/g, " ");
+        const outfit = outfits[i % outfits.length].replace(/_/g, " ");
+        const prompt = `Transform this photo into a professional headshot. Keep the person's face, features, and identity exactly the same. Change the background to ${bg}. Dress them in ${outfit}. Studio lighting, sharp focus on eyes, professional photographer quality. Do not change the person's face or ethnicity.`;
+
+        try {
+          const res = await fetch(
+            "https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                input: { prompt, input_image: referencePhotoUrl, aspect_ratio: "3:4", output_format: "webp", output_quality: 90 },
+                webhook: `https://haloshot.com/api/generate/webhook`,
+                webhook_events_filter: ["completed"],
+              }),
+            }
+          );
+          if (!res.ok) return null;
+          const prediction = await res.json();
+          return prediction.id as string;
+        } catch { return null; }
+      });
+
+      const fallbackResults = await Promise.all(fallbackPromises);
+      predictionIds.push(...fallbackResults.filter((id): id is string => id !== null));
+      actualModel = "quick";
+    }
+
     if (predictionIds.length === 0) {
       return NextResponse.json(
-        { error: "Failed to create any predictions" },
-        { status: 500 }
+        { error: "All models are currently unavailable. Please try again in a few minutes." },
+        { status: 503 }
       );
     }
 
     const modelVersion =
-      model === "studio" ? "nano-banana-2" : model === "fast" ? "nano-banana" : "flux-kontext-pro";
+      actualModel === "studio" ? "nano-banana-2" : actualModel === "fast" ? "nano-banana" : "flux-kontext-pro";
 
     // Create job record with all prediction IDs
     const { data: job } = await supabase
