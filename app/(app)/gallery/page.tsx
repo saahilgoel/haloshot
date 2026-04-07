@@ -133,6 +133,7 @@ export default function GalleryPage() {
         const currentCount = headshots.length;
         setEditingHeadshot(null);
         setEditPrompt("");
+        setViewerIndex(null);
         setPendingEdit(true);
         toast({ title: "Editing in progress", description: "New version will appear at the top of your gallery." });
 
@@ -261,15 +262,13 @@ export default function GalleryPage() {
         <>
           <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
             {pendingEdit && (
-              <div className="relative aspect-[3/4] rounded-xl overflow-hidden">
-                <Skeleton className="h-full w-full" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <Loader2 className="h-6 w-6 animate-spin text-violet-400 mx-auto mb-2" />
-                    <p className="text-xs text-white/40">Editing...</p>
-                  </div>
+              <Card className="overflow-hidden border-violet-500/20 bg-white/[0.02]">
+                <Skeleton className="aspect-[3/4]" />
+                <div className="p-2 sm:p-3">
+                  <Skeleton className="h-4 w-16 rounded-full" />
+                  <Skeleton className="h-3 w-20 mt-1" />
                 </div>
-              </div>
+              </Card>
             )}
             {filtered.map((headshot) => {
               const isFav = headshot.isFavorite || favorites.has(headshot.id);
