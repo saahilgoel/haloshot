@@ -47,7 +47,7 @@ export function Hero() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="mt-6 text-lg leading-relaxed text-muted-foreground sm:text-xl"
             >
-              AI headshots that exploit the halo effect. 60 seconds. $9.99/month.
+              AI headshots that exploit the halo effect. Score yours free. 60 seconds.
             </motion.p>
 
             <motion.div

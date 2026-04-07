@@ -93,10 +93,10 @@ function SectionHeader({
 /*  The Science Section                                                */
 /* ------------------------------------------------------------------ */
 const scienceStats = [
-  { value: "100ms", label: "First impression formed" },
-  { value: "21x", label: "More profile views" },
-  { value: "89%", label: "Hiring managers care about photo quality" },
-  { value: "+38", label: "Average glow-up score" },
+  { value: "1920", label: "Thorndike discovers the halo effect" },
+  { value: "3", label: "Perception dimensions scored" },
+  { value: "+38", label: "Average glow-up score improvement" },
+  { value: "98%", label: "Identity accuracy preserved" },
 ];
 
 function ScienceSection() {
@@ -337,8 +337,27 @@ const faqs = [
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 export default function MarketingPage() {
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.a,
+      },
+    })),
+  };
+
   return (
     <>
+      {/* FAQ structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+
       {/* Hero */}
       <Hero />
 

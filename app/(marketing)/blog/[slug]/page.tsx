@@ -63,6 +63,41 @@ const posts: Record<string, BlogPost> = {
       "Our recommendation: use AI headshots for LinkedIn, social media, team pages, and everyday professional branding. Save the photographer for your book cover or that Wall Street Journal feature.",
     ],
   },
+  "what-is-the-halo-effect": {
+    title: "What Is the Halo Effect and Why Your Profile Photo Exploits It",
+    category: "Science",
+    date: "Apr 5, 2026",
+    readTime: "8 min read",
+    author: "HaloShot Team",
+    content: [
+      "In 1920, psychologist Edward Thorndike asked military commanding officers to evaluate their soldiers. Rate their intelligence. Rate their leadership. Rate their physical fitness. Rate their character. The results were strange: the ratings were almost perfectly correlated. Soldiers who were rated as physically attractive were also rated as smarter, more loyal, and better leaders. Thorndike called this the \u2018halo effect\u2019 \u2014 the tendency for one positive trait to cast a \u2018halo\u2019 over all other judgments.",
+      "This wasn\u2019t a fluke. Over the next century, the halo effect became one of the most replicated findings in social psychology. In 2006, Princeton researchers Janine Willis and Alexander Todorov demonstrated that it takes just 100 milliseconds \u2014 one-tenth of a second \u2014 for humans to form a first impression of a face. That impression predicts with surprising accuracy how people will judge that face given unlimited time.",
+      "What does this mean for your LinkedIn photo, your dating profile, or your company\u2019s team page? It means the image people see before they read a single word about you has already shaped their perception of your competence, warmth, and trustworthiness. The halo effect is not something you opt into. It\u2019s happening to you right now.",
+      "Susan Fiske, Amy Cuddy, and Peter Glick proposed the Stereotype Content Model in 2002, identifying two fundamental dimensions along which humans evaluate others: warmth (is this person friendly? Do they have good intentions?) and competence (is this person capable? Can they act on those intentions?). Todorov later added trustworthiness as a third key dimension for face evaluation.",
+      "These three dimensions \u2014 warmth, competence, and trustworthiness \u2014 are what the Halo Score measures. When you upload a photo to HaloShot, our model evaluates the visual signals in your image that trigger these perception dimensions: lighting quality, facial expression, eye contact, background context, framing, and composition.",
+      "The important insight is that these signals are \u2018manipulable\u2019. Todorov\u2019s own research showed that small changes to how a face is presented \u2014 better lighting, a slight angle change, a genuine smile \u2014 can dramatically shift perceived warmth and competence without changing the person\u2019s actual face. You\u2019re not changing who you are. You\u2019re changing what the viewer\u2019s brain assumes about you in the first 100 milliseconds.",
+      "This is not about vanity. A 2014 study by Olivola, Funk, and Todorov found that first-impression judgments of competence from photos predicted real-world outcomes like election results and CEO hiring. The halo effect doesn\u2019t just influence casual browsing \u2014 it shapes career outcomes, business relationships, and trust decisions.",
+      "Understanding the halo effect is the first step. Measuring it is the second. And optimizing for it is the third. That\u2019s what HaloShot is for: making the invisible visible, and giving you control over a process that\u2019s been happening without your input since the moment you uploaded that first profile photo.",
+    ],
+  },
+  "linkedin-photo-tips": {
+    title: "7 Things High-Scoring LinkedIn Photos Have in Common",
+    category: "LinkedIn",
+    date: "Apr 2, 2026",
+    readTime: "6 min read",
+    author: "HaloShot Team",
+    content: [
+      "After scoring thousands of LinkedIn headshots through HaloShot, we started seeing patterns. The photos that score above 80 on the Halo Score \u2014 the ones that project warmth, competence, and trustworthiness \u2014 share specific characteristics. Here are the seven most consistent ones.",
+      "1. Soft, directional lighting. This is the single biggest factor. Photos with soft light from one side (typically the left) score 15-20 points higher than photos with harsh overhead lighting, flash, or uneven shadows. Natural window light works. Ring lights work. Your office fluorescents don\u2019t.",
+      "2. Face fills 60-70% of the frame. Too close feels aggressive. Too far feels disengaged. The sweet spot is having your face fill roughly two-thirds of the image, with some space above your head and your shoulders visible. This signals both approachability and professionalism.",
+      "3. A genuine smile that reaches the eyes. Psychologists call this a Duchenne smile \u2014 the kind where your eye muscles contract, creating small wrinkles at the corners. It scores dramatically higher on warmth than a closed-mouth smile or a forced grin. The key: think of something genuinely funny right before the shot.",
+      "4. Neutral or slightly blurred background. Busy backgrounds tank your competence score. Your brain has to work harder to focus on the face, and the clutter signals disorganization. A solid wall, a slightly out-of-focus office, or a gradient background all work. Your kitchen does not.",
+      "5. Shoulders angled 20-30 degrees. Facing the camera dead-on can read as confrontational. Turning too far looks evasive. A slight angle conveys confidence and approachability simultaneously. This is portrait photography 101, but most selfie-takers face the camera straight on.",
+      "6. Professional but not overdressed. Wearing a suit when your industry doesn\u2019t require one can actually lower your warmth score \u2014 it creates distance. The highest-scoring photos match the formality of the person\u2019s actual role. A startup founder in a clean t-shirt scores higher than the same founder in a stiff suit.",
+      "7. Recent. Photos older than 2-3 years score lower on trustworthiness. If you look noticeably different from your photo, the mismatch creates a subconscious trust gap. Update your photo at least once a year. With HaloShot, it takes 60 seconds.",
+      "These seven factors explain about 80% of the variance in Halo Scores across the LinkedIn photos we\u2019ve analyzed. The remaining 20% comes from subtler factors like color temperature, contrast, and facial symmetry. Want to see where your current photo stands? Score it free at haloshot.com/score.",
+    ],
+  },
 };
 
 const defaultPost: BlogPost = {

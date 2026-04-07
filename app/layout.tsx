@@ -20,24 +20,31 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HaloShot — Your Photo Is Making a First Impression Without You",
+  metadataBase: new URL("https://haloshot.com"),
+  title: {
+    default: "HaloShot — AI Headshots Powered by the Halo Effect | Score Your Photo Free",
+    template: "%s | HaloShot",
+  },
   description:
-    "AI headshots that exploit the halo effect. Score your current photo, get a glow-up in 60 seconds. The science of first impressions, perfected.",
+    "Your photo makes a first impression in 100ms. HaloShot scores your photo for warmth, competence & trustworthiness, then generates AI headshots that exploit the halo effect. Free Halo Score. 60 seconds. From $9.99/mo.",
   openGraph: {
-    title: "HaloShot — Your Photo Is Making a First Impression Without You",
+    title: "HaloShot — AI Headshots Powered by the Halo Effect | Score Your Photo Free",
     description:
-      "AI headshots that exploit the halo effect. Score your current photo, get a glow-up in 60 seconds. The science of first impressions, perfected.",
+      "Your photo makes a first impression in 100ms. HaloShot scores your photo for warmth, competence & trustworthiness, then generates AI headshots that exploit the halo effect. Free Halo Score. 60 seconds.",
     type: "website",
-    url: "https://haloshot.ai",
+    url: "https://haloshot.com",
     siteName: "HaloShot",
   },
   twitter: {
     card: "summary_large_image",
-    title: "HaloShot — Your Photo Is Making a First Impression Without You",
+    title: "HaloShot — AI Headshots Powered by the Halo Effect",
     description:
-      "AI headshots that exploit the halo effect. Score your current photo, get a glow-up in 60 seconds. The science of first impressions, perfected.",
+      "Score your photo for warmth, competence & trustworthiness. Get AI headshots in 60 seconds. Free Halo Score.",
   },
   icons: { icon: "/favicon.svg" },
+  alternates: {
+    canonical: "https://haloshot.com",
+  },
 };
 
 export default function RootLayout({

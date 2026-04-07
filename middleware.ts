@@ -1,20 +1,21 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-const publicPatterns = [
-  /^\/$/, // root
-  /^\/(marketing)/, // marketing pages
-  /^\/api\//, // API routes
-  /^\/(auth)/, // auth pages (login, signup, callback)
-  /^\/login/, // login page direct
-  /^\/signup/, // signup page direct
-  /^\/pick\/[^/]+$/, // public vote pages /pick/[slug]
-  /^\/s\/[^/]+$/, // public shared headshot pages /s/[slug]
-  /^\/score\/public/, // public score sharing pages
+// Routes that require authentication (everything else is public)
+const protectedPatterns = [
+  /^\/dashboard/,
+  /^\/generate/,
+  /^\/gallery/,
+  /^\/editor/,
+  /^\/settings/,
+  /^\/refer/,
+  /^\/team/,
+  /^\/pick\/new$/,
+  /^\/admin/,
 ];
 
-function isPublicRoute(pathname: string): boolean {
-  return publicPatterns.some((pattern) => pattern.test(pathname));
+function isProtectedRoute(pathname: string): boolean {
+  return protectedPatterns.some((pattern) => pattern.test(pathname));
 }
 
 export async function middleware(request: NextRequest) {
@@ -23,12 +24,12 @@ export async function middleware(request: NextRequest) {
   // Refresh Supabase auth session
   const { user, supabaseResponse } = await updateSession(request);
 
-  // Allow public routes
-  if (isPublicRoute(pathname)) {
+  // Public routes — allow without auth
+  if (!isProtectedRoute(pathname)) {
     return supabaseResponse;
   }
 
-  // Protect /admin/* routes - check admin email
+  // Protect /admin/* routes — check admin email
   if (pathname.startsWith("/admin")) {
     if (!user) {
       const loginUrl = new URL("/login", request.url);
@@ -48,7 +49,7 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Protect all (app)/* routes (dashboard, generate, gallery, etc.)
+  // All other protected routes — require auth
   if (!user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);

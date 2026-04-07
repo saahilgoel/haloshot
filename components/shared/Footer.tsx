@@ -1,11 +1,47 @@
 import Link from "next/link";
 
-const footerLinks = [
-  { label: "Privacy", href: "/privacy" },
-  { label: "Terms", href: "/terms" },
-  { label: "Blog", href: "/blog" },
-  { label: "Compare", href: "/compare" },
-  { label: "Contact", href: "/contact" },
+const footerSections = [
+  {
+    title: "Product",
+    links: [
+      { label: "Score Your Photo", href: "/score" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "Examples", href: "/examples" },
+    ],
+  },
+  {
+    title: "Use Cases",
+    links: [
+      { label: "LinkedIn", href: "/for/linkedin" },
+      { label: "Dating", href: "/for/dating" },
+      { label: "Founders", href: "/for/founders" },
+      { label: "Teams", href: "/for/teams" },
+      { label: "Real Estate", href: "/for/real-estate" },
+    ],
+  },
+  {
+    title: "Compare",
+    links: [
+      { label: "vs HeadshotPro", href: "/compare/headshotpro" },
+      { label: "vs Aragon", href: "/compare/aragon" },
+      { label: "vs BetterPic", href: "/compare/betterpic" },
+    ],
+  },
+  {
+    title: "Learn",
+    links: [
+      { label: "The Science", href: "/science" },
+      { label: "Blog", href: "/blog" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
+      { label: "Contact", href: "/contact" },
+    ],
+  },
 ];
 
 const socialLinks = [
@@ -41,53 +77,74 @@ const socialLinks = [
 export function Footer() {
   return (
     <footer className="border-t border-border bg-background">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center gap-8 md:flex-row md:justify-between">
-          {/* Logo + tagline */}
-          <div className="flex flex-col items-center gap-2 md:items-start">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        {/* Grid */}
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-6">
+          {/* Brand */}
+          <div className="col-span-2 sm:col-span-3 lg:col-span-1">
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500 text-xs font-bold text-white">
                 H
               </div>
               <span className="font-display text-lg font-bold">HaloShot</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Made with care for professionals everywhere
+            <p className="mt-3 text-sm text-muted-foreground">
+              AI headshots powered by the halo effect.
             </p>
+            {/* Social */}
+            <div className="mt-4 flex items-center gap-3">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                  aria-label={social.label}
+                >
+                  {social.icon}
+                </a>
+              ))}
+            </div>
           </div>
 
-          {/* Links */}
-          <nav className="flex flex-wrap justify-center gap-6">
-            {footerLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+          {/* Link columns */}
+          {footerSections.map((section) => (
+            <div key={section.title}>
+              <h4 className="text-sm font-semibold text-foreground">{section.title}</h4>
+              <ul className="mt-3 space-y-2">
+                {section.links.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
 
-          {/* Social */}
-          <div className="flex items-center gap-4">
-            {socialLinks.map((social) => (
-              <a
-                key={social.label}
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground transition-colors hover:text-foreground"
-                aria-label={social.label}
-              >
-                {social.icon}
-              </a>
-            ))}
-          </div>
+        {/* Trust bar */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 border-t border-border pt-8">
+          {[
+            "AES-256 encrypted",
+            "Photos auto-deleted in 30 days",
+            "You own your photos",
+            "Never used for AI training",
+          ].map((item) => (
+            <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="h-1 w-1 rounded-full bg-lime-400" />
+              {item}
+            </span>
+          ))}
         </div>
 
         {/* Copyright */}
-        <div className="mt-8 border-t border-border pt-6 text-center">
+        <div className="mt-6 text-center">
           <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} HaloShot. All rights reserved.
           </p>
