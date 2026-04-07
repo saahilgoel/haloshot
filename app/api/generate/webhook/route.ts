@@ -27,6 +27,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true }); // Don't error — might be a duplicate
     }
 
+    let savedHeadshot: { id: string } | null = null;
+    let permanentUrl = "";
+
     if (status === "succeeded" && output) {
       // Handle both model outputs:
       // - Nano Banana 2 returns a single URL string
@@ -43,7 +46,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Persist image to Supabase Storage — full size + thumbnail
-      let permanentUrl = imageUrl;
+      permanentUrl = imageUrl;
       let thumbnailUrl = imageUrl;
       try {
         const imgRes = await fetch(imageUrl);
@@ -110,7 +113,7 @@ export async function POST(req: NextRequest) {
         .eq("id", job.id);
 
       // Save each new image to gallery
-      const { data: savedHeadshot } = await supabase.from("saved_headshots").insert({
+      const { data: savedHs } = await supabase.from("saved_headshots").insert({
         user_id: job.user_id,
         generation_job_id: job.id,
         original_url: permanentUrl,
@@ -118,18 +121,7 @@ export async function POST(req: NextRequest) {
         preset_id: job.preset_id,
         resolution: "1024x1024",
       }).select("id").single();
-
-      // Auto-score the generated headshot (non-blocking)
-      if (savedHeadshot) {
-        analyzePhoto(permanentUrl)
-          .then(async (score) => {
-            await supabase
-              .from("saved_headshots")
-              .update({ halo_score: score.overall_score })
-              .eq("id", savedHeadshot.id);
-          })
-          .catch((err) => console.error("Auto-score failed:", err));
-      }
+      savedHeadshot = savedHs;
 
       // If all done, update user generation count
       if (allDone) {
@@ -178,6 +170,19 @@ export async function POST(req: NextRequest) {
             completed_at: new Date().toISOString(),
           })
           .eq("id", job.id);
+      }
+    }
+
+    // Auto-score AFTER all DB writes are done (must await or Vercel kills it)
+    if (status === "succeeded" && savedHeadshot && permanentUrl) {
+      try {
+        const score = await analyzePhoto(permanentUrl);
+        await supabase
+          .from("saved_headshots")
+          .update({ halo_score: score.overall_score })
+          .eq("id", savedHeadshot.id);
+      } catch (err) {
+        console.error("Auto-score failed:", err);
       }
     }
 
