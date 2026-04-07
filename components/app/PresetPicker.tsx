@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Sparkles } from "lucide-react";
+import { Lock, Sparkles, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { STYLE_PRESETS } from "@/lib/ai/prompts";
 
 interface PresetPickerProps {
@@ -15,7 +14,7 @@ interface PresetPickerProps {
 const presetList = Object.values(STYLE_PRESETS);
 
 const categories = [
-  { id: "all", label: "All Styles" },
+  { id: "all", label: "All" },
   { id: "professional", label: "Professional" },
   { id: "creative", label: "Creative" },
   { id: "dating", label: "Dating" },
@@ -23,6 +22,56 @@ const categories = [
   { id: "corporate", label: "Corporate" },
   { id: "industry", label: "Industry" },
 ];
+
+// Unique gradient + accent for each preset — creates instant visual identity
+const presetVisuals: Record<string, { gradient: string; glow: string; tagline: string }> = {
+  linkedin_executive: {
+    gradient: "from-slate-800 via-slate-700 to-blue-900",
+    glow: "shadow-blue-500/20",
+    tagline: "Close deals. Open doors.",
+  },
+  founder_energy: {
+    gradient: "from-amber-900 via-orange-800 to-yellow-900",
+    glow: "shadow-amber-500/20",
+    tagline: "Raise rounds. Turn heads.",
+  },
+  dating_magnetic: {
+    gradient: "from-pink-900 via-rose-800 to-fuchsia-900",
+    glow: "shadow-pink-500/20",
+    tagline: "Swipe right. Every time.",
+  },
+  creative_edge: {
+    gradient: "from-purple-900 via-indigo-800 to-violet-900",
+    glow: "shadow-purple-500/20",
+    tagline: "Moody. Editorial. You.",
+  },
+  corporate_uniform: {
+    gradient: "from-zinc-800 via-gray-700 to-neutral-800",
+    glow: "shadow-zinc-500/20",
+    tagline: "Team-ready. Pixel-perfect.",
+  },
+  south_asian_pro: {
+    gradient: "from-amber-800 via-yellow-900 to-orange-900",
+    glow: "shadow-yellow-500/20",
+    tagline: "Warm. Polished. Authentic.",
+  },
+  real_estate_trust: {
+    gradient: "from-emerald-900 via-teal-800 to-cyan-900",
+    glow: "shadow-emerald-500/20",
+    tagline: "Trust on every yard sign.",
+  },
+  social_scroll_stop: {
+    gradient: "from-cyan-900 via-blue-800 to-indigo-900",
+    glow: "shadow-cyan-500/20",
+    tagline: "Stop the scroll. Own it.",
+  },
+};
+
+const fallbackVisual = {
+  gradient: "from-zinc-800 via-zinc-700 to-zinc-800",
+  glow: "shadow-white/10",
+  tagline: "Your best look yet.",
+};
 
 export function PresetPicker({ selectedPreset, onSelect, isPro }: PresetPickerProps) {
   const [activeCategory, setActiveCategory] = useState("all");
@@ -32,18 +81,18 @@ export function PresetPicker({ selectedPreset, onSelect, isPro }: PresetPickerPr
     : presetList.filter(p => p.category === activeCategory);
 
   return (
-    <div className="space-y-6">
-      {/* Category tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+    <div className="space-y-5">
+      {/* Category chips — horizontal scroll */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
         {categories.map(cat => (
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
             className={cn(
-              "whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all",
+              "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200",
               activeCategory === cat.id
-                ? "bg-violet-600 text-white"
-                : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
+                ? "bg-violet-600 text-white shadow-lg shadow-violet-600/25"
+                : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80"
             )}
           >
             {cat.label}
@@ -51,77 +100,74 @@ export function PresetPicker({ selectedPreset, onSelect, isPro }: PresetPickerPr
         ))}
       </div>
 
-      {/* Preset grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
-        {filteredPresets.map((preset, index) => {
+      {/* Preset grid — visual cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {filteredPresets.map((preset) => {
           const isLocked = !preset.isFree && !isPro;
           const isSelected = selectedPreset === preset.id;
+          const visual = presetVisuals[preset.id] || fallbackVisual;
 
           return (
             <button
               key={preset.id}
               onClick={() => !isLocked && onSelect(preset.id)}
               className={cn(
-                "group relative flex flex-col rounded-2xl border p-4 text-left transition-all duration-300 animate-in fade-in",
-                isSelected
-                  ? "border-violet-500 bg-violet-500/10 ring-2 ring-violet-500/30"
-                  : "border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]",
-                isLocked && "opacity-60 cursor-not-allowed"
+                "group relative flex flex-col rounded-2xl overflow-hidden text-left transition-all duration-300",
+                "border border-white/[0.06] hover:border-white/15",
+                isSelected && "ring-2 ring-violet-500 ring-offset-2 ring-offset-background scale-[1.02] shadow-lg",
+                isSelected && visual.glow,
+                isLocked && "cursor-not-allowed",
+                !isSelected && !isLocked && "hover:scale-[1.02] active:scale-[0.98]"
               )}
             >
-              {/* Icon + Lock */}
-              <div className="flex items-start justify-between mb-3">
-                <span className="text-2xl">{preset.icon}</span>
-                {isLocked ? (
-                  <Lock className="h-4 w-4 text-white/30" />
-                ) : preset.isFree ? (
-                  <Badge variant="secondary" className="text-[10px] bg-emerald-500/20 text-emerald-400 border-0">
-                    FREE
-                  </Badge>
-                ) : null}
-              </div>
+              {/* Gradient hero — the visual identity */}
+              <div className={cn(
+                "relative flex items-center justify-center bg-gradient-to-br py-8 sm:py-10",
+                visual.gradient
+              )}>
+                {/* Ambient texture */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.06),transparent_60%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(0,0,0,0.3),transparent_60%)]" />
 
-              {/* Name + Description */}
-              <h3 className="font-display text-sm font-semibold text-white mb-1">
-                {preset.name}
-              </h3>
-              <p className="text-xs text-white/50 line-clamp-2 leading-relaxed mb-2">
-                {preset.description}
-              </p>
+                {/* Large icon */}
+                <span className="relative text-4xl sm:text-5xl drop-shadow-lg select-none">
+                  {preset.icon}
+                </span>
 
-              {/* Halo pitch */}
-              <p className="text-[10px] text-amber-400/70 leading-snug line-clamp-2">
-                {preset.haloPitch}
-              </p>
-
-              {/* Style options preview */}
-              <div className="mt-3 flex flex-wrap gap-1">
-                {preset.styleConfig.backgrounds.slice(0, 3).map(bg => (
-                  <span
-                    key={bg}
-                    className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-white/40"
-                  >
-                    {bg.replace(/_/g, " ")}
+                {/* FREE badge */}
+                {preset.isFree && !isSelected && (
+                  <span className="absolute top-2 right-2 rounded-full bg-emerald-500/80 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
+                    Free
                   </span>
-                ))}
+                )}
+
+                {/* Selected checkmark */}
+                {isSelected && (
+                  <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-violet-500 text-white shadow-lg">
+                    <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                  </div>
+                )}
+
+                {/* PRO lock overlay */}
+                {isLocked && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                    <div className="flex items-center gap-1.5 rounded-full bg-violet-600/90 px-3 py-1 text-xs font-semibold text-white shadow-xl backdrop-blur">
+                      <Sparkles className="h-3 w-3" />
+                      PRO
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Selected indicator */}
-              {isSelected && (
-                <div
-                  className="absolute -top-px -right-px -bottom-px -left-px rounded-2xl border-2 border-violet-500 pointer-events-none"
-                />
-              )}
-
-              {/* Pro badge overlay */}
-              {isLocked && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/20 backdrop-blur-[1px]">
-                  <Badge className="bg-violet-600 text-white gap-1 border-0">
-                    <Sparkles className="h-3 w-3" />
-                    PRO
-                  </Badge>
-                </div>
-              )}
+              {/* Name + tagline */}
+              <div className="flex flex-col gap-0.5 p-3 bg-white/[0.02]">
+                <h3 className="text-sm font-semibold text-white truncate">
+                  {preset.name}
+                </h3>
+                <p className="text-[11px] text-white/40 truncate">
+                  {visual.tagline}
+                </p>
+              </div>
             </button>
           );
         })}
