@@ -59,9 +59,29 @@ export async function POST(req: NextRequest) {
 
     const prediction = await res.json();
 
+    // Get user's face profile (required FK)
+    let { data: faceProfile } = await supabase
+      .from("face_profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .limit(1)
+      .single();
+
+    // Create one if none exists
+    if (!faceProfile) {
+      const { data: newFp } = await supabase
+        .from("face_profiles")
+        .insert({ user_id: user.id, photo_urls: [imageUrl], detected_features: {}, status: "ready", is_active: true })
+        .select("id")
+        .single();
+      faceProfile = newFp;
+    }
+
     // Create a job so the webhook can find it
     const { error: insertError } = await supabase.from("generation_jobs").insert({
       user_id: user.id,
+      face_profile_id: faceProfile?.id,
       preset_id: "edit",
       num_images: 1,
       status: "processing",
