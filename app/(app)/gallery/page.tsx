@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/lib/hooks/use-toast";
 import {
   Heart,
   Download,
@@ -64,6 +65,7 @@ interface Headshot {
 
 export default function GalleryPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [sort, setSort] = useState<SortType>("newest");
   const [styleFilter, setStyleFilter] = useState("All");
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -130,13 +132,13 @@ export default function GalleryPage() {
         setEditingHeadshot(null);
         setEditPrompt("");
         // Result will arrive via webhook → saved_headshots. Show feedback.
-        alert("Editing in progress! The new version will appear in your gallery in ~30 seconds.");
+        toast({ title: "Editing in progress", description: "The new version will appear in your gallery in ~30 seconds." });
       } else {
         alert(data.error || "Edit failed. Please try again.");
       }
     } catch (err) {
       console.error("Edit failed:", err);
-      alert("Edit failed. Please try again.");
+      toast({ title: "Edit failed", description: "Please try again.", variant: "destructive" });
     } finally {
       setIsEditing(false);
     }
