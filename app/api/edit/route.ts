@@ -60,15 +60,19 @@ export async function POST(req: NextRequest) {
     const prediction = await res.json();
 
     // Create a job so the webhook can find it
-    await supabase.from("generation_jobs").insert({
+    const { error: insertError } = await supabase.from("generation_jobs").insert({
       user_id: user.id,
       preset_id: "edit",
       num_images: 1,
       status: "processing",
       replicate_prediction_id: prediction.id,
       model_version: "flux-kontext-pro-edit",
-      face_profile_id: null, // Edit jobs don't have a face profile
     });
+
+    if (insertError) {
+      console.error("Failed to create edit job:", insertError);
+      return NextResponse.json({ error: "Failed to save edit job. The edit may still process but won't appear in your gallery." }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true, predictionId: prediction.id });
   } catch (error) {
