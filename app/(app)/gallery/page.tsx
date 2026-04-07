@@ -77,6 +77,7 @@ export default function GalleryPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [pendingEdit, setPendingEdit] = useState(false);
+  const [loadingImageId, setLoadingImageId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchHeadshots() {
@@ -149,6 +150,8 @@ export default function GalleryPage() {
             .select("id, original_url, thumbnail_url, preset_id, is_favorite, halo_score, created_at")
             .order("created_at", { ascending: false });
           if (fresh && fresh.length > currentCount) {
+            const newImageId = fresh[0].id;
+            setLoadingImageId(newImageId);
             setHeadshots(fresh.map(h => ({
               id: h.id,
               url: h.original_url,
@@ -289,11 +292,20 @@ export default function GalleryPage() {
                     className="relative aspect-[3/4] overflow-hidden cursor-pointer"
                     onClick={() => setViewerIndex(filtered.indexOf(headshot))}
                   >
+                    {loadingImageId === headshot.id && (
+                      <Skeleton className="absolute inset-0 z-10" />
+                    )}
                     <img
                       src={headshot.thumbnailUrl}
                       alt="Headshot"
                       loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      onLoad={() => {
+                        if (loadingImageId === headshot.id) setLoadingImageId(null);
+                      }}
+                      className={cn(
+                        "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105",
+                        loadingImageId === headshot.id && "opacity-0"
+                      )}
                     />
 
                     {/* Halo Score badge */}

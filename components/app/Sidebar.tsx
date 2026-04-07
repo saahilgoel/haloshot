@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/hooks/useUser";
 import {
   LayoutDashboard,
@@ -179,9 +180,11 @@ export function Sidebar() {
             </Link>
             <button
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
-              onClick={() => {
+              onClick={async () => {
                 setDropdownOpen(false);
-                // TODO: implement logout
+                const supabase = createClient();
+                await supabase.auth.signOut();
+                window.location.href = "/login";
               }}
             >
               <LogOut className="h-4 w-4" />

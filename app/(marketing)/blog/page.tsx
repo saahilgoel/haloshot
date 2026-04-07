@@ -7,6 +7,15 @@ import { Badge } from "@/components/ui/badge";
 
 const posts = [
   {
+    slug: "what-your-linkedin-photo-is-really-saying",
+    title: "What Your LinkedIn Photo Is Really Saying About You: We Scored 100 Profiles",
+    excerpt: "We scored 100 real LinkedIn headshots. The average Halo Score was 43. Here\u2019s what separates the top scorers from everyone else \u2014 and the century-old psychology behind it.",
+    category: "LinkedIn",
+    date: "Apr 8, 2026",
+    readTime: "7 min read",
+    gradient: "from-halo-500/30 to-amber-600/20",
+  },
+  {
     slug: "best-linkedin-headshot-tips-2026",
     title: "The Complete Guide to LinkedIn Headshots in 2026",
     excerpt: "Everything you need to know about getting a professional LinkedIn photo that actually gets results.",

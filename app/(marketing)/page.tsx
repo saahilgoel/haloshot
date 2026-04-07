@@ -380,8 +380,8 @@ export default function MarketingPage() {
       <Section>
         <SectionHeader
           tag="Proof"
-          title="People are talking about their scores."
-          description="We didn\u2019t ask them to. They just couldn\u2019t stop."
+          title="The numbers speak."
+          description="Thousands of photos scored. Real improvements measured."
         />
         <Testimonials />
       </Section>

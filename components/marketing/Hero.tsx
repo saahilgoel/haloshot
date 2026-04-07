@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { HeroScoreWidget } from "./HeroScoreWidget";
 
 export function Hero() {
   return (
@@ -92,63 +93,14 @@ export function Hero() {
             </motion.div>
           </div>
 
-          {/* Right: Halo Score Demo Widget */}
+          {/* Right: Interactive Score Widget */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.2 }}
             className="relative mx-auto w-full max-w-md lg:max-w-none"
           >
-            <div className="relative flex flex-col items-center justify-center rounded-3xl border border-white/[0.08] bg-surface/80 p-10 backdrop-blur-sm">
-              {/* Glow ring */}
-              <div className="relative">
-                <div className="absolute -inset-4 rounded-full bg-halo-500/20 blur-xl animate-pulse" />
-                <div className="relative flex h-44 w-44 items-center justify-center rounded-full border-4 border-halo-500/60 bg-gradient-to-br from-halo-500/10 to-transparent">
-                  <div className="text-center">
-                    <motion.p
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.6, delay: 0.6 }}
-                      className="font-display text-6xl font-bold text-halo-400"
-                    >
-                      87
-                    </motion.p>
-                    <p className="text-sm font-medium text-halo-300/80">Halo Score</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Score breakdown */}
-              <div className="mt-8 w-full space-y-3">
-                {[
-                  { label: "Warmth", score: 91 },
-                  { label: "Competence", score: 84 },
-                  { label: "Trustworthiness", score: 86 },
-                ].map((dim) => (
-                  <div key={dim.label}>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{dim.label}</span>
-                      <span className="font-mono text-sm font-medium text-foreground">{dim.score}</span>
-                    </div>
-                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${dim.score}%` }}
-                        transition={{ duration: 0.8, delay: 0.8 }}
-                        className="h-full rounded-full bg-gradient-to-r from-halo-500 to-halo-400"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <p className="mt-6 text-center text-xs text-muted-foreground">
-                Demo score. Upload your photo to get your real Halo Score.
-              </p>
-            </div>
-
-            {/* Decorative glow */}
-            <div className="pointer-events-none absolute -inset-6 rounded-3xl bg-gradient-to-r from-violet-600/10 via-halo-500/15 to-violet-600/10 blur-2xl" />
+            <HeroScoreWidget />
           </motion.div>
         </div>
       </div>

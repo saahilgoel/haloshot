@@ -95,8 +95,9 @@ export default function DashboardPage() {
   }, []);
 
   const hasHeadshots = recentHeadshots.length > 0;
-  const hasScore = haloScore !== null;
   const bestScore = recentHeadshots.reduce((max, h) => Math.max(max, h.haloScore ?? 0), haloScore ?? 0);
+  const displayScore = haloScore ?? bestScore;
+  const hasScore = displayScore > 0;
 
   return (
     <div className="space-y-8">
@@ -126,7 +127,7 @@ export default function DashboardPage() {
                   <div className="relative flex h-24 w-24 items-center justify-center rounded-full border-[3px] border-halo/40 bg-black/40">
                     <div className="text-center">
                       <span className="font-display text-4xl font-black text-halo">
-                        {haloScore}
+                        {displayScore}
                       </span>
                     </div>
                   </div>
@@ -137,14 +138,14 @@ export default function DashboardPage() {
 
                 <div>
                   <h2 className="font-display text-xl font-bold text-white">
-                    {haloScore! >= 80
+                    {displayScore >= 80
                       ? "Strong first impression."
-                      : haloScore! >= 60
+                      : displayScore >= 60
                         ? "Room to improve."
                         : "Your photo is underselling you."}
                   </h2>
                   <p className="mt-1 text-sm text-white/40">
-                    {haloScore! >= 80
+                    {displayScore >= 80
                       ? "You're making an above-average first impression. The halo effect is working for you."
                       : "Most people underestimate how much their photo matters. Let's fix that."}
                   </p>

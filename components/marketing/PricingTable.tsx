@@ -17,6 +17,7 @@ const plans = [
     cta: "Face the truth",
     ctaHref: "/score",
     highlighted: false,
+    oneTime: false,
     features: [
       { text: "3 AI headshots", included: true },
       { text: "1 Halo Score analysis", included: true },
@@ -28,13 +29,33 @@ const plans = [
     ],
   },
   {
+    name: "The Quick Fix",
+    description: "One-time. No commitment. Just better photos.",
+    monthlyPrice: 14.99,
+    annualPrice: 14.99,
+    cta: "Get the fix",
+    ctaHref: "/signup?plan=quickfix",
+    highlighted: true,
+    oneTime: true,
+    features: [
+      { text: "50 AI headshots", included: true },
+      { text: "5 Halo Score analyses", included: true },
+      { text: "All style presets", included: true },
+      { text: "HD quality (2048px)", included: true },
+      { text: "No watermark", included: true },
+      { text: "Commercial license", included: true },
+      { text: "Background removal", included: true },
+    ],
+  },
+  {
     name: "The Glow-Up",
     description: "For people ready to stop being overlooked.",
     monthlyPrice: 9.99,
     annualPrice: 6.66,
     cta: "Start glowing",
     ctaHref: "/signup?plan=pro",
-    highlighted: true,
+    highlighted: false,
+    oneTime: false,
     features: [
       { text: "100 AI headshots / month", included: true },
       { text: "Unlimited Halo Scores", included: true },
@@ -47,12 +68,13 @@ const plans = [
   },
   {
     name: "The Team Glow-Up",
-    description: "Your team&apos;s photos are a branding problem. Fix it.",
+    description: "Your team\u2019s photos are a branding problem. Fix it.",
     monthlyPrice: 7.99,
     annualPrice: 5.33,
     cta: "Glow up the team",
     ctaHref: "/signup?plan=team",
     highlighted: false,
+    oneTime: false,
     perPerson: true,
     features: [
       { text: "Unlimited headshots per person", included: true },
@@ -106,7 +128,7 @@ export function PricingTable() {
       </div>
 
       {/* Cards */}
-      <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-3">
+      <div className="mx-auto grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {plans.map((plan, i) => (
           <motion.div
             key={plan.name}
@@ -125,7 +147,7 @@ export function PricingTable() {
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="bg-halo-500 text-gray-900 border-0 hover:bg-halo-500 gap-1 font-semibold">
                   <Sparkles className="h-3 w-3" />
-                  Most Popular
+                  Most people pick this
                 </Badge>
               </div>
             )}
@@ -140,15 +162,17 @@ export function PricingTable() {
             <div className="mb-6">
               <div className="flex items-baseline gap-1">
                 <span className="font-display text-4xl font-bold">
-                  ${annual ? plan.annualPrice.toFixed(2) : plan.monthlyPrice.toFixed(2)}
+                  ${plan.oneTime ? plan.monthlyPrice.toFixed(2) : (annual ? plan.annualPrice.toFixed(2) : plan.monthlyPrice.toFixed(2))}
                 </span>
-                {plan.monthlyPrice > 0 && (
+                {plan.oneTime ? (
+                  <span className="text-sm text-muted-foreground">one-time</span>
+                ) : plan.monthlyPrice > 0 ? (
                   <span className="text-sm text-muted-foreground">
                     /{plan.perPerson ? "person/mo" : "mo"}
                   </span>
-                )}
+                ) : null}
               </div>
-              {annual && plan.monthlyPrice > 0 && (
+              {!plan.oneTime && annual && plan.monthlyPrice > 0 && (
                 <p className="mt-1 text-sm text-muted-foreground">
                   Billed annually (${(plan.annualPrice * 12).toFixed(0)}/yr
                   {plan.perPerson ? " per person" : ""})

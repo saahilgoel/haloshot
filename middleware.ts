@@ -10,6 +10,7 @@ const publicPatterns = [
   /^\/signup/, // signup page direct
   /^\/pick\/[^/]+$/, // public vote pages /pick/[slug]
   /^\/s\/[^/]+$/, // public shared headshot pages /s/[slug]
+  /^\/score\/public/, // public score sharing pages
 ];
 
 function isPublicRoute(pathname: string): boolean {

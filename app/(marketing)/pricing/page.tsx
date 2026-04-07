@@ -13,19 +13,19 @@ import {
 } from "@/components/ui/accordion";
 
 const featureMatrix = [
-  { feature: "AI headshots / month", free: "3", pro: "100", team: "Unlimited" },
-  { feature: "Halo Score analyses", free: "1", pro: "Unlimited", team: "Unlimited" },
-  { feature: "Warmth + Competence breakdown", free: "yes", pro: "yes", team: "yes" },
-  { feature: "Style presets", free: "1", pro: "All 30+", team: "All 30+ + custom brand" },
-  { feature: "Resolution", free: "1024px", pro: "2048px", team: "2048px" },
-  { feature: "Watermark-free", free: false, pro: true, team: true },
-  { feature: "Background removal", free: false, pro: true, team: true },
-  { feature: "Commercial license", free: false, pro: true, team: true },
-  { feature: "Priority generation", free: false, pro: true, team: true },
-  { feature: "Team Halo Score dashboard", free: false, pro: false, team: true },
-  { feature: "Batch processing", free: false, pro: false, team: true },
-  { feature: "SSO / SAML", free: false, pro: false, team: true },
-  { feature: "API access", free: false, pro: false, team: true },
+  { feature: "AI headshots", free: "3", quickfix: "50", pro: "100 / mo", team: "Unlimited" },
+  { feature: "Halo Score analyses", free: "1", quickfix: "5", pro: "Unlimited", team: "Unlimited" },
+  { feature: "Warmth + Competence breakdown", free: "yes", quickfix: "yes", pro: "yes", team: "yes" },
+  { feature: "Style presets", free: "1", quickfix: "All 30+", pro: "All 30+", team: "All 30+ + custom brand" },
+  { feature: "Resolution", free: "1024px", quickfix: "2048px", pro: "2048px", team: "2048px" },
+  { feature: "Watermark-free", free: false, quickfix: true, pro: true, team: true },
+  { feature: "Background removal", free: false, quickfix: true, pro: true, team: true },
+  { feature: "Commercial license", free: false, quickfix: true, pro: true, team: true },
+  { feature: "Priority generation", free: false, quickfix: false, pro: true, team: true },
+  { feature: "Team Halo Score dashboard", free: false, quickfix: false, pro: false, team: true },
+  { feature: "Batch processing", free: false, quickfix: false, pro: false, team: true },
+  { feature: "SSO / SAML", free: false, quickfix: false, pro: false, team: true },
+  { feature: "API access", free: false, quickfix: false, pro: false, team: true },
 ];
 
 const pricingFaqs = [
@@ -83,7 +83,7 @@ export default function PricingPage() {
             transition={{ delay: 0.1 }}
             className="mt-4 text-lg text-muted-foreground"
           >
-            The reality check is free. The glow-up is $9.99/mo. The team glow-up is $7.99/person. No hidden fees. No surprises. Unlike your current Halo Score.
+            The reality check is free. The quick fix is $14.99 one-time. The glow-up is $9.99/mo. No hidden fees. No surprises. Unlike your current Halo Score.
           </motion.p>
         </div>
       </section>
@@ -126,7 +126,8 @@ export default function PricingPage() {
                   Feature
                 </th>
                 <th className="pb-4 text-center text-sm font-medium text-muted-foreground">The Reality Check</th>
-                <th className="pb-4 text-center text-sm font-semibold text-halo-400">The Glow-Up</th>
+                <th className="pb-4 text-center text-sm font-semibold text-halo-400">The Quick Fix</th>
+                <th className="pb-4 text-center text-sm font-medium text-muted-foreground">The Glow-Up</th>
                 <th className="pb-4 text-center text-sm font-medium text-muted-foreground">The Team Glow-Up</th>
               </tr>
             </thead>
@@ -146,6 +147,11 @@ export default function PricingPage() {
                     </div>
                   </td>
                   <td className="py-3.5 text-center bg-halo-500/5">
+                    <div className="flex justify-center">
+                      <CellValue value={row.quickfix} />
+                    </div>
+                  </td>
+                  <td className="py-3.5 text-center">
                     <div className="flex justify-center">
                       <CellValue value={row.pro} />
                     </div>

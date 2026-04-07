@@ -2,33 +2,32 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Briefcase, TrendingUp, Eye, UserCheck } from "lucide-react";
+import { ArrowRight, Rocket, TrendingUp, Eye, Users } from "lucide-react";
 import { CTABanner } from "@/components/marketing/CTABanner";
-import { Testimonials } from "@/components/marketing/Testimonials";
 
 const stats = [
-  { icon: Eye, value: "21x", label: "More profile views with a high Halo Score photo" },
-  { icon: TrendingUp, value: "36%", label: "Higher recruiter response rate" },
-  { icon: UserCheck, value: "89%", label: "Of hiring managers judge your photo first" },
+  { icon: Eye, value: "100ms", label: "Investors form a first impression of your team" },
+  { icon: TrendingUp, value: "71%", label: "Of investors say founder credibility matters more than the idea" },
+  { icon: Users, value: "+46", label: "Average team Halo Score glow-up" },
 ];
 
-export default function LinkedInPage() {
+export default function FoundersPage() {
   return (
     <>
       {/* Hero */}
       <section className="relative overflow-hidden pb-16 pt-16 sm:pt-24">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-1/2 top-0 h-[500px] w-[800px] -translate-x-1/2 -translate-y-1/3 rounded-full bg-blue-600/15 blur-[120px]" />
+          <div className="absolute left-1/2 top-0 h-[500px] w-[800px] -translate-x-1/2 -translate-y-1/3 rounded-full bg-emerald-600/15 blur-[120px]" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-400/10 px-4 py-1.5 text-sm font-medium text-blue-300"
+              className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-sm font-medium text-emerald-300"
             >
-              <Briefcase className="h-4 w-4" />
-              LinkedIn Headshots
+              <Rocket className="h-4 w-4" />
+              Founder Headshots
             </motion.div>
 
             <motion.h1
@@ -37,11 +36,10 @@ export default function LinkedInPage() {
               transition={{ delay: 0.1 }}
               className="font-display text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl"
             >
-              Your LinkedIn photo scored a{" "}
-              <span className="bg-gradient-to-r from-red-400 to-amber-400 bg-clip-text text-transparent">
-                34.
-              </span>{" "}
-              That&apos;s what recruiters see first.
+              Your headshot is in your pitch deck.{" "}
+              <span className="bg-gradient-to-r from-emerald-400 to-halo-400 bg-clip-text text-transparent">
+                Investors notice.
+              </span>
             </motion.h1>
 
             <motion.p
@@ -50,9 +48,9 @@ export default function LinkedInPage() {
               transition={{ delay: 0.2 }}
               className="mt-6 text-lg text-muted-foreground"
             >
-              Hiring managers spend 100 milliseconds judging your photo before reading your
-              experience. A low Halo Score means your resume never gets read. A high one
-              means you get the click, the message, the interview.
+              VCs meet 100 founders a week. Your team slide gets 3 seconds.
+              A high Halo Score signals competence and trustworthiness before you
+              say a word. A low one signals the opposite.
             </motion.p>
 
             <motion.div
@@ -65,7 +63,7 @@ export default function LinkedInPage() {
                 href="/score"
                 className="group inline-flex h-12 items-center gap-2 rounded-xl bg-halo-500 px-8 text-base font-semibold text-gray-900 transition-all hover:bg-halo-400"
               >
-                Score your LinkedIn photo
+                Score your team&apos;s photos
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <Link
@@ -99,51 +97,50 @@ export default function LinkedInPage() {
         </div>
       </section>
 
-      {/* LinkedIn examples placeholder */}
+      {/* Founder-specific styles */}
       <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
         <h2 className="mb-3 text-center font-display text-2xl font-bold sm:text-3xl">
-          LinkedIn-optimized. Halo-scored.
+          Founder-optimized. Investor-approved.
         </h2>
         <p className="mx-auto mb-8 max-w-xl text-center text-sm text-muted-foreground">
-          Each style is designed to maximize a specific perception dimension recruiters look for.
+          Each style is tuned for the perception investors look for: competence, warmth, and trustworthiness.
         </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { style: "Authoritative", score: 91 },
-            { style: "Approachable", score: 88 },
-            { style: "Executive", score: 93 },
-            { style: "Creative", score: 85 },
+            { style: "CEO / Visionary", score: 92 },
+            { style: "Technical Co-founder", score: 88 },
+            { style: "Approachable Leader", score: 90 },
+            { style: "Board-ready", score: 94 },
           ].map((item, i) => (
-              <motion.div
-                key={item.style}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-blue-600/30 to-cyan-600/20 border border-white/[0.06] flex flex-col items-center justify-center"
-              >
-                <div className="h-20 w-20 rounded-full bg-white/20" />
-                <div className="mt-2 h-8 w-14 rounded-t-full bg-white/15" />
-                <span className="mt-4 text-sm font-medium text-white/70">{item.style}</span>
-                <span className="mt-1 font-mono text-lg font-bold text-halo-400">{item.score}</span>
-              </motion.div>
-            )
-          )}
+            <motion.div
+              key={item.style}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-emerald-600/30 to-teal-600/20 border border-white/[0.06] flex flex-col items-center justify-center"
+            >
+              <div className="h-20 w-20 rounded-full bg-white/20" />
+              <div className="mt-2 h-8 w-14 rounded-t-full bg-white/15" />
+              <span className="mt-4 text-sm font-medium text-white/70">{item.style}</span>
+              <span className="mt-1 font-mono text-lg font-bold text-halo-400">{item.score}</span>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* The problem */}
+      {/* The pitch */}
       <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
         <h2 className="mb-8 text-center font-display text-2xl font-bold">
-          What your LinkedIn photo is actually saying
+          What your pitch deck team slide is really saying
         </h2>
         <div className="space-y-4">
           {[
-            "A blurry selfie says: \u201CI don\u2019t take my career seriously.\u201D",
-            "A photo from 2018 says: \u201CI\u2019m hiding something.\u201D",
-            "A cropped group photo says: \u201CI don\u2019t have anyone to take my picture.\u201D",
-            "No photo at all says: \u201CI\u2019m not real.\u201D",
-            "A high Halo Score photo says: \u201CI\u2019m competent, warm, and worth your time.\u201D",
+            "Mismatched headshots say: \u201CWe met last week.\u201D",
+            "Selfies on the team slide say: \u201CWe don\u2019t take details seriously.\u201D",
+            "No photos at all say: \u201CWe\u2019re hiding something.\u201D",
+            "Stock-quality headshots say: \u201CWe\u2019re not real people.\u201D",
+            "A consistent, high-scoring team page says: \u201CWe\u2019re credible, cohesive, and ready.\u201D",
           ].map((tip, i) => (
             <motion.div
               key={i}
@@ -160,17 +157,29 @@ export default function LinkedInPage() {
             </motion.div>
           ))}
         </div>
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          HaloShot scores what recruiters see. Then fixes it.
-        </p>
       </section>
 
-      {/* Social proof */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <h2 className="mb-8 text-center font-display text-2xl font-bold">
-          The numbers speak.
-        </h2>
-        <Testimonials />
+      {/* Team glow-up CTA */}
+      <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-8 text-center sm:p-12"
+        >
+          <h3 className="font-display text-2xl font-bold">Team glow-up in one afternoon.</h3>
+          <p className="mt-3 text-muted-foreground">
+            Get your whole founding team scored and upgraded. Consistent style, consistent quality,
+            consistent first impression. Investors will notice.
+          </p>
+          <Link
+            href="/signup?plan=team"
+            className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-halo-500 px-8 text-sm font-semibold text-gray-900 transition-all hover:bg-halo-400"
+          >
+            <Users className="h-4 w-4" />
+            Get the team glow-up
+          </Link>
+        </motion.div>
       </section>
 
       <CTABanner />
