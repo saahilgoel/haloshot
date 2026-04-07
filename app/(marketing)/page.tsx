@@ -50,7 +50,7 @@ function Section({
   return (
     <section
       id={id}
-      className={cn("mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8", className)}
+      className={cn("mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8", className)}
     >
       {children}
     </section>
@@ -72,7 +72,7 @@ function SectionHeader({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5 }}
-      className="mx-auto mb-14 max-w-2xl text-center"
+      className="mx-auto mb-8 max-w-2xl text-center"
     >
       {tag && (
         <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-halo-400">

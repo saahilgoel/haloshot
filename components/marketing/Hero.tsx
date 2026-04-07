@@ -7,7 +7,7 @@ import { HeroScoreWidget } from "./HeroScoreWidget";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pb-20 pt-12 sm:pt-20 lg:pt-28">
+    <section className="relative overflow-hidden pb-10 pt-10 sm:pt-16 lg:pt-20">
       {/* Background effects */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-1/2 top-0 h-[600px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-600/20 blur-[120px]" />

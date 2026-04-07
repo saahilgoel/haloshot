@@ -15,7 +15,7 @@ export function CTABanner() {
         <div className="h-[300px] w-[300px] rounded-full bg-halo-500/10 blur-[80px]" />
       </div>
 
-      <div className="relative mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 sm:py-28 lg:px-8">
+      <div className="relative mx-auto max-w-4xl px-4 py-12 text-center sm:px-6 sm:py-16 lg:px-8">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
