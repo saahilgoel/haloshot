@@ -401,8 +401,8 @@ export default function GalleryPage() {
         </div>
       )}
 
-      {/* Fullscreen Viewer */}
-      {viewerIndex !== null && filtered[viewerIndex] && (
+      {/* Fullscreen Viewer — hidden when edit modal is open */}
+      {viewerIndex !== null && filtered[viewerIndex] && !editingHeadshot && (
         <div
           className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col"
           onKeyDown={(e) => {
@@ -411,7 +411,7 @@ export default function GalleryPage() {
             if (e.key === "Escape") setViewerIndex(null);
           }}
           tabIndex={0}
-          ref={(el) => { if (el && !editingHeadshot) el.focus(); }}
+          ref={(el) => el?.focus()}
         >
           {/* Top bar */}
           <div className="flex items-center justify-between px-4 py-3 sm:px-6">
@@ -537,6 +537,7 @@ export default function GalleryPage() {
                   value={editPrompt}
                   onChange={e => setEditPrompt(e.target.value)}
                   className="bg-white/5 border-white/10"
+                  autoFocus
                   onKeyDown={e => { if (e.key === "Enter" && editPrompt.trim()) handleEdit(); }}
                 />
               </div>
