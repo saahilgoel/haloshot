@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/hooks/useUser";
+import { STYLE_PRESETS } from "@/lib/ai/prompts";
 
 function useGreeting(): string {
   const [greeting, setGreeting] = useState("Welcome back");
@@ -49,11 +50,29 @@ export default function DashboardPage() {
 
   const displayName = profile?.full_name?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "there";
   const haloScore = profile?.current_halo_score ?? null;
-  const totalHeadshots = profile?.generations_count_total ?? 0;
+
+  const [totalHeadshots, setTotalHeadshots] = useState(0);
+  const [avgScore, setAvgScore] = useState(0);
+
+  const presetName = (id: string) => STYLE_PRESETS[id as keyof typeof STYLE_PRESETS]?.name || id.replace(/_/g, " ");
 
   useEffect(() => {
     async function fetchRecent() {
       const supabase = createClient();
+
+      // Get all for stats
+      const { data: all } = await supabase
+        .from("saved_headshots")
+        .select("halo_score")
+        .not("halo_score", "is", null);
+
+      if (all && all.length > 0) {
+        setTotalHeadshots(all.length);
+        const scores = all.map(h => h.halo_score as number);
+        setAvgScore(Math.round(scores.reduce((a, b) => a + b, 0) / scores.length));
+      }
+
+      // Get recent 8 for display
       const { data } = await supabase
         .from("saved_headshots")
         .select("id, original_url, preset_id, halo_score, created_at")
@@ -61,10 +80,11 @@ export default function DashboardPage() {
         .limit(8);
 
       if (data && data.length > 0) {
+        setTotalHeadshots(prev => prev || data.length);
         setRecentHeadshots(data.map(h => ({
           id: h.id,
           url: h.original_url,
-          preset: h.preset_id || "Unknown",
+          preset: presetName(h.preset_id || "Unknown"),
           haloScore: h.halo_score ?? undefined,
           date: new Date(h.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
         })));
@@ -77,7 +97,6 @@ export default function DashboardPage() {
   const hasHeadshots = recentHeadshots.length > 0;
   const hasScore = haloScore !== null;
   const bestScore = recentHeadshots.reduce((max, h) => Math.max(max, h.haloScore ?? 0), haloScore ?? 0);
-  const avgGlowUp = hasScore && bestScore > 0 ? bestScore - (haloScore ?? 0) : 0;
 
   return (
     <div className="space-y-8">
@@ -184,8 +203,8 @@ export default function DashboardPage() {
             color: "text-halo",
           },
           {
-            label: "Avg Glow-Up",
-            value: `+${avgGlowUp}`,
+            label: "Avg Score",
+            value: avgScore || "—",
             icon: TrendingUp,
             color: "text-lime",
           },

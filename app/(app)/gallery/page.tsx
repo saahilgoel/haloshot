@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { STYLE_PRESETS } from "@/lib/ai/prompts";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/lib/hooks/use-toast";
@@ -95,7 +96,7 @@ export default function GalleryPage() {
           id: h.id,
           url: h.original_url,
           thumbnailUrl: h.thumbnail_url || h.original_url,
-          preset: h.preset_id || "Unknown",
+          preset: STYLE_PRESETS[h.preset_id as keyof typeof STYLE_PRESETS]?.name || (h.preset_id || "Unknown").replace(/_/g, " "),
           isFavorite: h.is_favorite || false,
           haloScore: h.halo_score ?? undefined,
           date: new Date(h.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
@@ -152,7 +153,7 @@ export default function GalleryPage() {
               id: h.id,
               url: h.original_url,
               thumbnailUrl: h.thumbnail_url || h.original_url,
-              preset: h.preset_id || "edit",
+              preset: STYLE_PRESETS[h.preset_id as keyof typeof STYLE_PRESETS]?.name || (h.preset_id || "edit").replace(/_/g, " "),
               isFavorite: h.is_favorite || false,
               haloScore: h.halo_score ?? undefined,
               date: new Date(h.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
