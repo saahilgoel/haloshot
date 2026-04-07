@@ -91,14 +91,13 @@ export default function GeneratePage() {
   };
 
   // When generation completes or has partial results, move to results
-  if (step === "generating") {
-    if (isComplete || isFailed) {
-      if (generatedImages.length > 0) {
-        setStep("results");
-      }
-      // If failed with zero images, GenerationProgress will show the error
+  useEffect(() => {
+    if (step !== "generating") return;
+    if ((isComplete || isFailed) && generatedImages.length > 0) {
+      setStep("results");
     }
-  }
+    // If failed with zero images, GenerationProgress will show the error
+  }, [step, isComplete, isFailed, generatedImages.length]);
 
   // Auto-transition: if we have images and job seems stuck, show results
   useEffect(() => {
@@ -335,6 +334,8 @@ export default function GeneratePage() {
                 numImages={job?.numImages || 4}
                 modelName={model}
                 completedCount={generatedImages.length}
+                errorMessage={error || undefined}
+                onRetry={isFailed ? handleGenerate : undefined}
               />
 
               {/* Show images as they arrive */}

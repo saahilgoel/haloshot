@@ -411,7 +411,7 @@ export default function GalleryPage() {
             if (e.key === "Escape") setViewerIndex(null);
           }}
           tabIndex={0}
-          ref={(el) => el?.focus()}
+          ref={(el) => { if (el && !editingHeadshot) el.focus(); }}
         >
           {/* Top bar */}
           <div className="flex items-center justify-between px-4 py-3 sm:px-6">
@@ -519,7 +519,7 @@ export default function GalleryPage() {
 
       {/* Edit Modal */}
       {editingHeadshot && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setEditingHeadshot(null)}>
+        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setEditingHeadshot(null)}>
           <div className="bg-card border border-white/10 rounded-2xl max-w-lg w-full p-6 space-y-4" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="font-display font-bold text-lg">Edit Headshot</h3>

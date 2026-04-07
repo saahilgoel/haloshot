@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-export const maxDuration = 15;
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,15 +36,26 @@ export async function POST(req: NextRequest) {
             output_quality: 90,
           },
           webhook: `https://haloshot.com/api/generate/webhook`,
-          webhook_events_filter: ["completed"],
+          webhook_events_filter: ["completed", "failed"],
         }),
       }
     );
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error("Replicate edit error:", errText);
-      return NextResponse.json({ error: "Failed to start edit" }, { status: 500 });
+      console.error("Replicate edit error:", res.status, errText);
+
+      // Provide more specific error messages based on status
+      if (res.status === 422) {
+        return NextResponse.json({ error: "Invalid image or prompt. Please try a different image." }, { status: 422 });
+      }
+      if (res.status === 429) {
+        return NextResponse.json({ error: "Service is busy. Please try again in a minute." }, { status: 429 });
+      }
+      if (res.status >= 500) {
+        return NextResponse.json({ error: "AI service is temporarily unavailable. Please try again shortly." }, { status: 502 });
+      }
+      return NextResponse.json({ error: "Failed to start edit. Please try again." }, { status: 500 });
     }
 
     const prediction = await res.json();
@@ -57,6 +68,7 @@ export async function POST(req: NextRequest) {
       status: "processing",
       replicate_prediction_id: prediction.id,
       model_version: "flux-kontext-pro-edit",
+      face_profile_id: null, // Edit jobs don't have a face profile
     });
 
     return NextResponse.json({ ok: true, predictionId: prediction.id });

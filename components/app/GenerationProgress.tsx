@@ -9,6 +9,8 @@ interface GenerationProgressProps {
   status: "queued" | "processing" | "completed" | "failed" | "canceled";
   presetName: string;
   numImages: number;
+  errorMessage?: string;
+  onRetry?: () => void;
   modelName?: "studio" | "fast" | "quick";
   completedCount?: number;
 }
@@ -30,7 +32,7 @@ const tips = [
   "Try different styles to find your perfect look",
 ];
 
-export function GenerationProgress({ status, presetName, numImages, modelName = "studio", completedCount = 0 }: GenerationProgressProps) {
+export function GenerationProgress({ status, presetName, numImages, errorMessage, onRetry, modelName = "studio", completedCount = 0 }: GenerationProgressProps) {
   const [elapsed, setElapsed] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
 
@@ -86,8 +88,16 @@ export function GenerationProgress({ status, presetName, numImages, modelName = 
         <XCircle className="h-16 w-16 text-red-400" />
         <div>
           <h3 className="text-xl font-display font-bold text-white">Generation failed</h3>
-          <p className="text-white/50 mt-1">Something went wrong. Please try again.</p>
+          <p className="text-white/50 mt-1">{errorMessage || "Something went wrong. Please try again."}</p>
         </div>
+        {onRetry && (
+          <button
+            onClick={onRetry}
+            className="mt-2 px-6 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium transition-colors"
+          >
+            Try Again
+          </button>
+        )}
       </div>
     );
   }
