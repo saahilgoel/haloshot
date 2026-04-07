@@ -109,8 +109,7 @@ export async function POST(req: NextRequest) {
           prompt,
           input_image: referencePhotoUrl,
           aspect_ratio: "3:4",
-          output_format: "webp",
-          output_quality: 90,
+          output_format: "jpg",
         };
       }
 
@@ -164,7 +163,7 @@ export async function POST(req: NextRequest) {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                input: { prompt, input_image: referencePhotoUrl, aspect_ratio: "3:4", output_format: "webp", output_quality: 90 },
+                input: { prompt, input_image: referencePhotoUrl, aspect_ratio: "3:4", output_format: "jpg" },
                 webhook: `https://haloshot.com/api/generate/webhook`,
                 webhook_events_filter: ["completed"],
               }),
