@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
             output_format: "jpg",
           },
           webhook: `https://haloshot.com/api/generate/webhook`,
-          webhook_events_filter: ["completed", "failed"],
+          webhook_events_filter: ["completed"],
         }),
       }
     );
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
       // Provide more specific error messages based on status
       if (res.status === 422) {
-        return NextResponse.json({ error: `Replicate 422: ${errText.slice(0, 200)}` }, { status: 422 });
+        return NextResponse.json({ error: "Invalid image or prompt. Please try a different image." }, { status: 422 });
       }
       if (res.status === 429) {
         return NextResponse.json({ error: "Service is busy. Please try again in a minute." }, { status: 429 });
