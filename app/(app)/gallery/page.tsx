@@ -75,6 +75,7 @@ export default function GalleryPage() {
   const [editPrompt, setEditPrompt] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [pendingEdit, setPendingEdit] = useState(false);
 
   useEffect(() => {
     async function fetchHeadshots() {
@@ -129,12 +130,39 @@ export default function GalleryPage() {
       });
       const data = await res.json();
       if (res.ok) {
+        const currentCount = headshots.length;
         setEditingHeadshot(null);
         setEditPrompt("");
-        // Result will arrive via webhook → saved_headshots. Show feedback.
-        toast({ title: "Editing in progress", description: "The new version will appear in your gallery in ~30 seconds." });
+        setPendingEdit(true);
+        toast({ title: "Editing in progress", description: "New version will appear at the top of your gallery." });
+
+        // Poll for the new headshot to arrive
+        const supabase = createClient();
+        let attempts = 0;
+        const poll = setInterval(async () => {
+          attempts++;
+          if (attempts > 30) { clearInterval(poll); setPendingEdit(false); return; }
+          const { data: fresh } = await supabase
+            .from("saved_headshots")
+            .select("id, original_url, thumbnail_url, preset_id, is_favorite, halo_score, created_at")
+            .order("created_at", { ascending: false });
+          if (fresh && fresh.length > currentCount) {
+            setHeadshots(fresh.map(h => ({
+              id: h.id,
+              url: h.original_url,
+              thumbnailUrl: h.thumbnail_url || h.original_url,
+              preset: h.preset_id || "edit",
+              isFavorite: h.is_favorite || false,
+              haloScore: h.halo_score ?? undefined,
+              date: new Date(h.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+            })));
+            setPendingEdit(false);
+            clearInterval(poll);
+            toast({ title: "Edit complete", description: "Your new headshot is ready!" });
+          }
+        }, 3000);
       } else {
-        alert(data.error || "Edit failed. Please try again.");
+        toast({ title: "Edit failed", description: data.error || "Please try again.", variant: "destructive" });
       }
     } catch (err) {
       console.error("Edit failed:", err);
@@ -232,6 +260,17 @@ export default function GalleryPage() {
       ) : hasHeadshots ? (
         <>
           <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {pendingEdit && (
+              <div className="relative aspect-[3/4] rounded-xl overflow-hidden">
+                <Skeleton className="h-full w-full" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-violet-400 mx-auto mb-2" />
+                    <p className="text-xs text-white/40">Editing...</p>
+                  </div>
+                </div>
+              </div>
+            )}
             {filtered.map((headshot) => {
               const isFav = headshot.isFavorite || favorites.has(headshot.id);
               const score = headshot.haloScore;

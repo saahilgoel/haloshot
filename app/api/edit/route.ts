@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         },
         body: JSON.stringify({
           input: {
-            prompt: `${prompt}. Keep the person's face and identity exactly the same. Professional quality.`,
+            prompt: `Edit this photo: ${prompt}. CRITICAL: Do NOT change the person's face, facial features, skin tone, ethnicity, age, or identity in ANY way. The face must be pixel-perfect identical to the input. Only modify what was explicitly requested.`,
             input_image: imageUrl,
             aspect_ratio: "3:4",
             output_format: "jpg",
