@@ -61,7 +61,10 @@ export function GenerationProgress({ status, presetName, numImages, modelName = 
   }
 
   const totalDuration = steps.reduce((sum, s) => sum + s.duration, 0);
-  const progress = status === "completed" ? 100 : Math.min((elapsed / totalDuration) * 100, 95);
+  // Use real image count for progress when available, fake time-based otherwise
+  const imageProgress = completedCount > 0 ? (completedCount / numImages) * 100 : 0;
+  const timeProgress = Math.min((elapsed / totalDuration) * 100, 95);
+  const progress = status === "completed" ? 100 : Math.max(imageProgress, timeProgress);
 
   if (status === "completed") {
     return (

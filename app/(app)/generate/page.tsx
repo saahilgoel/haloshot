@@ -50,7 +50,7 @@ export default function GeneratePage() {
     loadGenerationCount();
   }, []);
 
-  const { startGeneration, job, isGenerating, error, generatedImages, similarityScores, isComplete } = useGeneration();
+  const { startGeneration, job, isGenerating, error, generatedImages, similarityScores, isComplete, isFailed } = useGeneration();
 
   const handleUploadComplete = useCallback(async (urls: string[]) => {
     setUploadedUrls(urls);
@@ -90,10 +90,27 @@ export default function GeneratePage() {
     });
   };
 
-  // When generation completes, move to results and poll for scores
-  if (isComplete && step === "generating") {
-    setStep("results");
+  // When generation completes or has partial results, move to results
+  if (step === "generating") {
+    if (isComplete || isFailed) {
+      if (generatedImages.length > 0) {
+        setStep("results");
+      }
+      // If failed with zero images, GenerationProgress will show the error
+    }
   }
+
+  // Auto-transition: if we have images and job seems stuck, show results
+  useEffect(() => {
+    if (step !== "generating" || generatedImages.length === 0) return;
+    // After 90s with images, assume remaining predictions won't arrive
+    const timer = setTimeout(() => {
+      if (generatedImages.length > 0) {
+        setStep("results");
+      }
+    }, 90000);
+    return () => clearTimeout(timer);
+  }, [step, generatedImages.length]);
 
   // Poll for halo scores on results
   useEffect(() => {

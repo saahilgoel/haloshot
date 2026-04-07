@@ -125,13 +125,18 @@ export default function GalleryPage() {
           headshotId: editingHeadshot.id,
         }),
       });
+      const data = await res.json();
       if (res.ok) {
         setEditingHeadshot(null);
         setEditPrompt("");
-        router.push("/generate");
+        // Result will arrive via webhook → saved_headshots. Show feedback.
+        alert("Editing in progress! The new version will appear in your gallery in ~30 seconds.");
+      } else {
+        alert(data.error || "Edit failed. Please try again.");
       }
     } catch (err) {
       console.error("Edit failed:", err);
+      alert("Edit failed. Please try again.");
     } finally {
       setIsEditing(false);
     }

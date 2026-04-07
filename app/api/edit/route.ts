@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+export const maxDuration = 15;
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
