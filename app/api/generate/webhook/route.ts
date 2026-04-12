@@ -101,6 +101,18 @@ export async function POST(req: NextRequest) {
       const totalPredictions = (job.replicate_prediction_id || "").split(",").length;
       const allDone = updatedUrls.length >= totalPredictions;
 
+      // Estimate cost per image based on model
+      const costPerImage: Record<string, number> = {
+        "nano-banana-2": 0.003,
+        "nano-banana": 0.0015,
+        "flux-kontext-pro": 0.005,
+        "flux-kontext-pro-edit": 0.005,
+        "flux-kontext-dev": 0.0025,
+        "flux-dev": 0.0025,
+      };
+      const perImage = costPerImage[job.model_version] || 0.003;
+      const estimatedCost = updatedUrls.length * perImage;
+
       await supabase
         .from("generation_jobs")
         .update({
@@ -109,6 +121,7 @@ export async function POST(req: NextRequest) {
           status: allDone ? "completed" : "processing",
           completed_at: allDone ? new Date().toISOString() : null,
           processing_time_ms: metrics?.predict_time ? Math.round(metrics.predict_time * 1000) : null,
+          cost_usd: estimatedCost,
         })
         .eq("id", job.id);
 
