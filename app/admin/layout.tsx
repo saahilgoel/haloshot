@@ -15,12 +15,16 @@ import {
   FileText,
   Shield,
   ChevronLeft,
+  ScrollText,
+  FlaskConical,
 } from "lucide-react";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/generations", label: "Generations", icon: Image },
+  { href: "/admin/logs", label: "Logs", icon: ScrollText },
+  { href: "/admin/playground", label: "Playground", icon: FlaskConical },
   { href: "/admin/presets", label: "Presets", icon: Palette },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/feedback", label: "Feedback", icon: MessageSquare },
