@@ -1,8 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { FunnelChart } from "@/components/admin/FunnelChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   BarChart,
   Bar,
@@ -14,48 +17,42 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { RefreshCw, Loader2, TrendingUp, CheckCircle, XCircle } from "lucide-react";
 
-// Cohort retention data
-const cohortData = [
-  { cohort: "Jan 2026", users: 420, w1: 68, w4: 42, w12: 28 },
-  { cohort: "Feb 2026", users: 580, w1: 71, w4: 45, w12: 31 },
-  { cohort: "Mar 2026", users: 740, w1: 74, w4: 48, w12: null },
-  { cohort: "Apr 2026", users: 310, w1: 72, w4: null, w12: null },
-];
+interface StatsData {
+  stats: {
+    totalUsers: number;
+    proUsers: number;
+    totalJobs: number;
+    completedJobs: number;
+    failedJobs: number;
+    totalImages: number;
+    totalCost: number;
+    gensToday: number;
+    gensMonth: number;
+    byPlan: Record<string, number>;
+  };
+  signupsPerDay: Array<{ day: string; signups: number }>;
+  gensPerDay: Array<{ date: string; count: number }>;
+}
 
-// Top presets
-const topPresets = [
-  { name: "Natural Light", usage: 4200 },
-  { name: "LinkedIn Pro", usage: 3120 },
-  { name: "Corporate Classic", usage: 2840 },
-  { name: "Warm Studio", usage: 2100 },
-  { name: "Creative Studio", usage: 1560 },
-  { name: "Tech Founder", usage: 1250 },
-  { name: "Executive Suite", usage: 890 },
-  { name: "Editorial", usage: 340 },
-];
+interface GenStats {
+  stats: {
+    total: number;
+    byModel: Record<string, { count: number; totalCost: number; avgSimilarity: number; totalImages: number }>;
+    byStatus: Record<string, number>;
+    totalCost: number;
+    totalImages: number;
+  };
+}
 
-// Revenue by country
-const revenueByCountry = [
-  { country: "United States", revenue: 18200, pct: 42.7 },
-  { country: "United Kingdom", revenue: 5800, pct: 13.6 },
-  { country: "India", revenue: 4600, pct: 10.8 },
-  { country: "Germany", revenue: 3200, pct: 7.5 },
-  { country: "Canada", revenue: 2900, pct: 6.8 },
-  { country: "Australia", revenue: 2400, pct: 5.6 },
-  { country: "France", revenue: 1800, pct: 4.2 },
-  { country: "Others", revenue: 3700, pct: 8.7 },
-];
-
-// NPS trend
-const npsTrend = [
-  { month: "Nov", score: 42 },
-  { month: "Dec", score: 48 },
-  { month: "Jan", score: 52 },
-  { month: "Feb", score: 55 },
-  { month: "Mar", score: 61 },
-  { month: "Apr", score: 64 },
-];
+interface PresetWithUsage {
+  id: string;
+  name: string;
+  usageCount: number;
+  is_active: boolean;
+  category: string;
+}
 
 function ChartTooltip({
   active,
@@ -72,7 +69,6 @@ function ChartTooltip({
       <p className="text-xs text-muted-foreground">{label}</p>
       {payload.map((p, i) => (
         <p key={i} className="text-sm font-bold text-foreground">
-          {p.name === "revenue" ? "$" : ""}
           {p.value.toLocaleString()}
         </p>
       ))}
@@ -80,50 +76,178 @@ function ChartTooltip({
   );
 }
 
-function retentionColor(pct: number | null) {
-  if (pct === null) return "text-muted-foreground/30";
-  if (pct >= 50) return "text-lime-400";
-  if (pct >= 35) return "text-yellow-400";
-  return "text-red-400";
-}
-
 export default function AnalyticsPage() {
+  const [data, setData] = useState<StatsData | null>(null);
+  const [genStats, setGenStats] = useState<GenStats | null>(null);
+  const [presets, setPresets] = useState<PresetWithUsage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function fetchData() {
+    try {
+      const [statsRes, gensRes, presetsRes] = await Promise.all([
+        fetch("/api/admin/stats"),
+        fetch("/api/admin/generations"),
+        fetch("/api/admin/presets"),
+      ]);
+      const statsJson = await statsRes.json();
+      const gensJson = await gensRes.json();
+      const presetsJson = await presetsRes.json();
+      setData(statsJson);
+      setGenStats(gensJson);
+      setPresets(presetsJson.presets || []);
+    } catch (err) {
+      console.error("Failed to fetch analytics:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  function handleRefresh() {
+    setRefreshing(true);
+    fetchData();
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-6 w-6 animate-spin text-violet-400" />
+      </div>
+    );
+  }
+
+  const stats = data?.stats;
+  const successRate = stats && stats.totalJobs > 0
+    ? ((stats.completedJobs / stats.totalJobs) * 100).toFixed(1)
+    : "0";
+  const failRate = stats && stats.totalJobs > 0
+    ? ((stats.failedJobs / stats.totalJobs) * 100).toFixed(1)
+    : "0";
+
+  // Top presets by usage
+  const topPresets = [...presets]
+    .sort((a, b) => b.usageCount - a.usageCount)
+    .slice(0, 8)
+    .map(p => ({ name: p.name || "Unnamed", usage: p.usageCount }));
+
+  // Model breakdown
+  const modelData = genStats?.stats?.byModel
+    ? Object.entries(genStats.stats.byModel)
+        .map(([model, data]) => ({
+          model: model === "unknown" ? "Unknown" : model,
+          count: data.count,
+          cost: data.totalCost,
+          images: data.totalImages,
+          similarity: data.avgSimilarity,
+        }))
+        .sort((a, b) => b.count - a.count)
+    : [];
+
+  // Plan distribution data
+  const planData = stats?.byPlan
+    ? Object.entries(stats.byPlan).map(([plan, count]) => ({
+        plan: plan.charAt(0).toUpperCase() + plan.slice(1),
+        count,
+      }))
+    : [];
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-display font-bold">Analytics</h2>
-        <p className="text-sm text-muted-foreground">
-          Deep dive into user behavior, retention, and revenue metrics
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-display font-bold">Analytics</h2>
+          <p className="text-sm text-muted-foreground">
+            User behavior, generation performance, and preset usage
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="border-border gap-1.5"
+        >
+          <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
+          Refresh
+        </Button>
       </div>
 
-      {/* Row 1: Funnel + NPS */}
+      {/* Row 1: Funnel + Generation Success */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <FunnelChart />
 
         <Card className="border-border bg-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              NPS Score Trend
+              Generation Success Rate
             </CardTitle>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-display font-bold text-lime-400">
-                +{npsTrend[npsTrend.length - 1].score}
-              </p>
-              <span className="text-xs text-muted-foreground">current NPS</span>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="rounded-lg bg-lime-400/5 border border-lime-400/20 p-4 text-center">
+                <CheckCircle className="h-5 w-5 text-lime-400 mx-auto mb-1" />
+                <p className="text-2xl font-display font-bold text-lime-400">{successRate}%</p>
+                <p className="text-xs text-muted-foreground">Completed</p>
+                <p className="text-sm font-mono mt-1">{stats?.completedJobs.toLocaleString() || 0} jobs</p>
+              </div>
+              <div className="rounded-lg bg-red-400/5 border border-red-400/20 p-4 text-center">
+                <XCircle className="h-5 w-5 text-red-400 mx-auto mb-1" />
+                <p className="text-2xl font-display font-bold text-red-400">{failRate}%</p>
+                <p className="text-xs text-muted-foreground">Failed</p>
+                <p className="text-sm font-mono mt-1">{stats?.failedJobs.toLocaleString() || 0} jobs</p>
+              </div>
             </div>
+
+            <div className="space-y-3 pt-4 border-t border-border">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Total Jobs</span>
+                <span className="text-sm font-mono font-medium">{stats?.totalJobs.toLocaleString() || 0}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Images Generated</span>
+                <span className="text-sm font-mono font-medium">{stats?.totalImages.toLocaleString() || 0}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Today</span>
+                <span className="text-sm font-mono font-medium">{stats?.gensToday || 0}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">This Month</span>
+                <span className="text-sm font-mono font-medium">{stats?.gensMonth || 0}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Total Cost</span>
+                <span className="text-sm font-mono font-medium">${stats?.totalCost.toFixed(2) || "0.00"}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 2: User Growth + Generations Per Day */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-border bg-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              User Signups (Last 7 Days)
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[260px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={npsTrend}>
+                <BarChart data={data?.signupsPerDay || []}>
                   <CartesianGrid
                     strokeDasharray="3 3"
                     stroke="hsl(260 12% 16%)"
                     vertical={false}
                   />
                   <XAxis
-                    dataKey="month"
+                    dataKey="day"
                     tickLine={false}
                     axisLine={false}
                     tick={{ fill: "hsl(260 5% 55%)", fontSize: 12 }}
@@ -132,15 +256,55 @@ export default function AnalyticsPage() {
                     tickLine={false}
                     axisLine={false}
                     tick={{ fill: "hsl(260 5% 55%)", fontSize: 12 }}
-                    domain={[0, 100]}
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Bar
+                    dataKey="signups"
+                    fill="#C5F536"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={32}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border bg-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Generations Per Day (Last 7 Days)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[260px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data?.gensPerDay || []}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(260 12% 16%)"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: "hsl(260 5% 55%)", fontSize: 12 }}
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: "hsl(260 5% 55%)", fontSize: 12 }}
+                    allowDecimals={false}
                   />
                   <Tooltip content={<ChartTooltip />} />
                   <Line
                     type="monotone"
-                    dataKey="score"
-                    stroke="#C5F536"
+                    dataKey="count"
+                    stroke="#6C3CE0"
                     strokeWidth={2}
-                    dot={{ fill: "#C5F536", r: 4 }}
+                    dot={{ fill: "#6C3CE0", r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -149,75 +313,7 @@ export default function AnalyticsPage() {
         </Card>
       </div>
 
-      {/* Row 2: Cohort Retention */}
-      <Card className="border-border bg-card">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Cohort Retention
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-2 pr-4 font-medium text-muted-foreground">
-                    Cohort
-                  </th>
-                  <th className="text-right py-2 px-4 font-medium text-muted-foreground">
-                    Users
-                  </th>
-                  <th className="text-right py-2 px-4 font-medium text-muted-foreground">
-                    Week 1
-                  </th>
-                  <th className="text-right py-2 px-4 font-medium text-muted-foreground">
-                    Week 4
-                  </th>
-                  <th className="text-right py-2 px-4 font-medium text-muted-foreground">
-                    Week 12
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {cohortData.map((row) => (
-                  <tr key={row.cohort} className="border-b border-border last:border-0">
-                    <td className="py-3 pr-4 font-medium">{row.cohort}</td>
-                    <td className="py-3 px-4 text-right font-mono">
-                      {row.users}
-                    </td>
-                    <td
-                      className={cn(
-                        "py-3 px-4 text-right font-mono font-medium",
-                        retentionColor(row.w1)
-                      )}
-                    >
-                      {row.w1 !== null ? `${row.w1}%` : "--"}
-                    </td>
-                    <td
-                      className={cn(
-                        "py-3 px-4 text-right font-mono font-medium",
-                        retentionColor(row.w4)
-                      )}
-                    >
-                      {row.w4 !== null ? `${row.w4}%` : "--"}
-                    </td>
-                    <td
-                      className={cn(
-                        "py-3 px-4 text-right font-mono font-medium",
-                        retentionColor(row.w12)
-                      )}
-                    >
-                      {row.w12 !== null ? `${row.w12}%` : "--"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Row 3: Top presets + Revenue by country */}
+      {/* Row 3: Top presets + Model Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top presets */}
         <Card className="border-border bg-card">
@@ -227,75 +323,139 @@ export default function AnalyticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[320px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topPresets} layout="vertical">
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="hsl(260 12% 16%)"
-                    horizontal={false}
-                  />
-                  <XAxis
-                    type="number"
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fill: "hsl(260 5% 55%)", fontSize: 11 }}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fill: "hsl(260 5% 55%)", fontSize: 11 }}
-                    width={120}
-                  />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Bar
-                    dataKey="usage"
-                    fill="#6C3CE0"
-                    radius={[0, 4, 4, 0]}
-                    maxBarSize={24}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {topPresets.length > 0 ? (
+              <div className="h-[320px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topPresets} layout="vertical">
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="hsl(260 12% 16%)"
+                      horizontal={false}
+                    />
+                    <XAxis
+                      type="number"
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fill: "hsl(260 5% 55%)", fontSize: 11 }}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fill: "hsl(260 5% 55%)", fontSize: 11 }}
+                      width={120}
+                    />
+                    <Tooltip content={<ChartTooltip />} />
+                    <Bar
+                      dataKey="usage"
+                      fill="#6C3CE0"
+                      radius={[0, 4, 4, 0]}
+                      maxBarSize={24}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-[320px] text-muted-foreground text-sm">
+                No preset usage data yet
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Revenue by country */}
+        {/* Model usage breakdown */}
         <Card className="border-border bg-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Revenue by Country
+              Model Usage Breakdown
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {revenueByCountry.map((item) => (
-                <div key={item.country}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm">{item.country}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-mono">
-                        ${item.revenue.toLocaleString()}
-                      </span>
-                      <span className="text-xs text-muted-foreground w-10 text-right">
-                        {item.pct}%
-                      </span>
+            {modelData.length > 0 ? (
+              <div className="space-y-4">
+                {modelData.map((item) => {
+                  const maxCount = modelData[0].count;
+                  const pct = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
+                  return (
+                    <div key={item.model}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs font-mono bg-secondary px-1.5 py-0.5 rounded">
+                            {item.model}
+                          </code>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="text-muted-foreground text-xs">
+                            {item.images} imgs
+                          </span>
+                          <span className="font-mono font-medium">
+                            {item.count} jobs
+                          </span>
+                          <span className="text-xs text-muted-foreground w-16 text-right">
+                            ${item.cost.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-violet-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      {item.similarity > 0 && (
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Avg similarity: {(item.similarity * 100).toFixed(1)}%
+                        </p>
+                      )}
                     </div>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-violet-500"
-                      style={{ width: `${item.pct}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-[320px] text-muted-foreground text-sm">
+                No generation data yet
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Row 4: Plan Distribution */}
+      {planData.length > 0 && (
+        <Card className="border-border bg-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Plan Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-6">
+              {planData.map((item) => {
+                const total = planData.reduce((s, p) => s + p.count, 0);
+                const pct = total > 0 ? ((item.count / total) * 100).toFixed(1) : "0";
+                return (
+                  <div key={item.plan} className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <Badge variant="outline" className="text-xs bg-violet-500/10 text-violet-400 border-violet-500/20">
+                        {item.plan}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">{pct}%</span>
+                    </div>
+                    <p className="text-xl font-display font-bold">{item.count}</p>
+                    <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden mt-1">
+                      <div
+                        className="h-full rounded-full bg-violet-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
