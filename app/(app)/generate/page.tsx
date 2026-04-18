@@ -10,7 +10,7 @@ import { GenerationProgress } from "@/components/app/GenerationProgress";
 import { HeadshotGrid } from "@/components/app/HeadshotGrid";
 import { SubscriptionGate } from "@/components/app/SubscriptionGate";
 import { UsageIndicator } from "@/components/app/UsageIndicator";
-import { useGeneration } from "@/lib/hooks/useGeneration";
+import { useGeneration, getPersistedJobId } from "@/lib/hooks/useGeneration";
 import { useSubscription } from "@/lib/hooks/useSubscription";
 import { useUser } from "@/lib/hooks/useUser";
 import { STYLE_PRESETS } from "@/lib/ai/prompts";
@@ -34,6 +34,8 @@ export default function GeneratePage() {
   const [generationsUsed, setGenerationsUsed] = useState(0);
   const [hasExistingProfile, setHasExistingProfile] = useState(false);
 
+  const { startGeneration, resumeJob, job, isGenerating, error, generatedImages, similarityScores, isComplete, isFailed } = useGeneration();
+
   useEffect(() => {
     async function loadInitialData() {
       const supabase = createClient();
@@ -48,6 +50,17 @@ export default function GeneratePage() {
         .single();
       if (prof) {
         setGenerationsUsed(prof.generations_count_total || 0);
+      }
+
+      // Resume an in-flight job if the user bounced mid-generation.
+      // Server-side work (Replicate + webhook → Supabase) kept running
+      // regardless of whether the tab was open.
+      const pending = getPersistedJobId();
+      if (pending) {
+        console.log("[generate] resuming in-flight job", pending);
+        setStep("generating");
+        resumeJob(pending);
+        return;
       }
 
       // Check for existing face profile (from scoring)
@@ -70,9 +83,7 @@ export default function GeneratePage() {
       setStep("upload");
     }
     loadInitialData();
-  }, []);
-
-  const { startGeneration, job, isGenerating, error, generatedImages, similarityScores, isComplete, isFailed } = useGeneration();
+  }, [resumeJob]);
 
   const handleUploadComplete = useCallback(async (urls: string[]) => {
     setUploadedUrls(urls);

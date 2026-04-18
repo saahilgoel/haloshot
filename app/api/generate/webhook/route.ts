@@ -5,13 +5,20 @@ import { analyzePhoto } from "@/lib/ai/halo-score";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+  const t0 = Date.now();
+  const log = (predId: string, msg: string, extra?: unknown) =>
+    console.log(`[webhook ${predId.slice(0, 8)}] +${Date.now() - t0}ms ${msg}`, extra ?? "");
+
   try {
     const body = await req.json();
     const { id: predictionId, status, output, error: predictionError, metrics } = body;
 
     if (!predictionId) {
+      console.log("[webhook] received without prediction ID");
       return NextResponse.json({ error: "Missing prediction ID" }, { status: 400 });
     }
+
+    log(predictionId, "received", { status, hasOutput: !!output, predictTime: metrics?.predict_time });
 
     const supabase = createAdminClient();
 
@@ -23,9 +30,10 @@ export async function POST(req: NextRequest) {
 
     const job = jobs?.[0];
     if (!job) {
-      console.error("No job found for prediction:", predictionId);
+      log(predictionId, "no job found — possible duplicate or stale webhook");
       return NextResponse.json({ ok: true }); // Don't error — might be a duplicate
     }
+    log(predictionId, "matched job", { jobId: job.id, userId: job.user_id, currentImageCount: job.generated_image_urls?.length || 0 });
 
     let savedHeadshot: { id: string } | null = null;
     let permanentUrl = "";
@@ -48,9 +56,11 @@ export async function POST(req: NextRequest) {
       // Persist image to Supabase Storage — full size + thumbnail
       permanentUrl = imageUrl;
       let thumbnailUrl = imageUrl;
+      const storageStart = Date.now();
       try {
         const imgRes = await fetch(imageUrl);
         const buffer = Buffer.from(await imgRes.arrayBuffer());
+        log(predictionId, `image downloaded from replicate (${buffer.length} bytes in ${Date.now() - storageStart}ms)`);
         const ext = imageUrl.includes(".webp") ? "webp" : "png";
         const fullPath = `headshots/${job.user_id}/${job.id}/${predictionId}.${ext}`;
 
@@ -65,12 +75,16 @@ export async function POST(req: NextRequest) {
         }
 
         // Upload full size
+        const uploadStart = Date.now();
         const { error: fullErr } = await supabase.storage
           .from("generated")
           .upload(fullPath, buffer, { contentType: `image/${ext}`, upsert: true });
 
         if (!fullErr) {
           permanentUrl = supabase.storage.from("generated").getPublicUrl(fullPath).data.publicUrl;
+          log(predictionId, `full-size uploaded in ${Date.now() - uploadStart}ms`);
+        } else {
+          log(predictionId, "full-size upload FAILED", fullErr.message);
         }
 
         // Upload thumbnail if generated
@@ -100,6 +114,7 @@ export async function POST(req: NextRequest) {
       // Check if all predictions are done
       const totalPredictions = (job.replicate_prediction_id || "").split(",").length;
       const allDone = updatedUrls.length >= totalPredictions;
+      log(predictionId, `progress: ${updatedUrls.length}/${totalPredictions}${allDone ? " — COMPLETE" : ""}`);
 
       // Estimate cost per image based on model
       const costPerImage: Record<string, number> = {
@@ -153,10 +168,11 @@ export async function POST(req: NextRequest) {
       }
     } else if (status === "failed") {
       const isCapacityError = (predictionError || "").includes("unavailable") || (predictionError || "").includes("high demand") || (predictionError || "").includes("E003");
+      log(predictionId, "prediction FAILED", { error: String(predictionError).slice(0, 200), isCapacityError });
 
       // If capacity error and model isn't already the fallback, retry with Flux Kontext Pro
       if (isCapacityError && job.model_version !== "flux-kontext-pro" && job.model_version !== "flux-kontext-pro-edit") {
-        console.log(`Retrying prediction ${predictionId} with Flux Kontext Pro fallback`);
+        log(predictionId, "retrying with Flux Kontext Pro fallback");
         try {
           // Get a reference photo URL from the face profile
           const { data: faceProfile } = await supabase
@@ -245,20 +261,23 @@ export async function POST(req: NextRequest) {
 
     // Auto-score AFTER all DB writes are done (must await or Vercel kills it)
     if (status === "succeeded" && savedHeadshot && permanentUrl) {
+      const scoreStart = Date.now();
       try {
         const score = await analyzePhoto(permanentUrl);
         await supabase
           .from("saved_headshots")
           .update({ halo_score: score.overall_score })
           .eq("id", savedHeadshot.id);
+        log(predictionId, `halo-scored in ${Date.now() - scoreStart}ms`, { score: score.overall_score });
       } catch (err) {
-        console.error("Auto-score failed:", err);
+        log(predictionId, `halo-score FAILED in ${Date.now() - scoreStart}ms`, err instanceof Error ? err.message : String(err));
       }
     }
 
+    log(predictionId, `webhook done in ${Date.now() - t0}ms total`);
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Webhook error:", error);
+    console.error("[webhook] UNCAUGHT error:", error);
     return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 }

@@ -72,9 +72,31 @@
     @apply border-border;
   }
 
+  html,
+  body {
+    /* Kill horizontal scroll and pinch-zoom drift on mobile. */
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+    /* Block iOS double-tap zoom but keep pan/scroll. */
+    touch-action: pan-x pan-y;
+    /* Prevent iOS from auto-enlarging text on rotation. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-general), system-ui, sans-serif;
+  }
+
+  /* iOS Safari zooms into inputs with font-size < 16px — force 16px to
+     prevent the unwanted zoom-on-focus without shrinking the visual. */
+  @media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
   }
 }
 

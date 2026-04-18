@@ -5,7 +5,13 @@ import { STYLE_PRESETS } from "@/lib/ai/prompts";
 export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
+  const t0 = Date.now();
+  const reqId = Math.random().toString(36).slice(2, 8);
+  const log = (msg: string, extra?: unknown) =>
+    console.log(`[generate ${reqId}] +${Date.now() - t0}ms ${msg}`, extra ?? "");
+
   try {
+    log("POST received");
     const supabase = await createClient();
     const {
       data: { user },
@@ -13,10 +19,12 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      log("unauthorized", authError?.message);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { presetId, photoUrls, model = "studio", count } = await req.json();
+    log("body parsed", { presetId, model, count, photoCount: photoUrls?.length, userId: user.id });
 
     const preset = STYLE_PRESETS[presetId as keyof typeof STYLE_PRESETS];
     if (!preset) {
@@ -40,8 +48,12 @@ export async function POST(req: NextRequest) {
       .single();
 
     const isPro = profile?.subscription_tier === "pro" || profile?.subscription_tier === "team";
-    const defaultCount = isPro ? 8 : 4;
-    const totalImages = count ? Math.min(count, 8) : defaultCount;
+    // Progressive generation: start with 2 images for fast time-to-first-shot.
+    // User can hit "Generate More" on the results screen to dispatch another batch.
+    const defaultCount = 2;
+    const maxCount = isPro ? 8 : 4;
+    const totalImages = count ? Math.min(count, maxCount) : defaultCount;
+    log("image count decided", { isPro, totalImages, defaultCount, maxCount });
 
     // Get or create a face profile for this user
     let { data: faceProfile } = await supabase
@@ -113,6 +125,7 @@ export async function POST(req: NextRequest) {
         };
       }
 
+      const predStart = Date.now();
       try {
         const res = await fetch(apiUrl, {
           method: "POST",
@@ -123,31 +136,33 @@ export async function POST(req: NextRequest) {
           body: JSON.stringify({
             input: inputPayload,
             webhook: `https://haloshot.com/api/generate/webhook`,
-            webhook_events_filter: ["completed", "failed"],
+            webhook_events_filter: ["completed"],
           }),
         });
 
         if (!res.ok) {
           const errText = await res.text();
-          console.error(`Replicate error for prediction ${i}:`, errText);
+          log(`replicate ${model} prediction ${i} FAILED`, { status: res.status, body: errText.slice(0, 300) });
           return null;
         }
 
         const prediction = await res.json();
+        log(`replicate ${model} prediction ${i} dispatched in ${Date.now() - predStart}ms`, { id: prediction.id });
         return prediction.id as string;
       } catch (err) {
-        console.error(`Failed to create prediction ${i}:`, err);
+        log(`replicate ${model} prediction ${i} threw`, err instanceof Error ? err.message : String(err));
         return null;
       }
     });
 
     const results = await Promise.all(predictionPromises);
     const predictionIds = results.filter((id): id is string => id !== null);
+    log("all predictions dispatched", { total: totalImages, successful: predictionIds.length });
 
     // If primary model failed, fall back to Flux Kontext Pro
     let actualModel = model;
     if (predictionIds.length === 0 && model !== "quick") {
-      console.log(`Primary model failed, falling back to Flux Kontext Pro`);
+      log("primary model failed entirely, falling back to Flux Kontext Pro");
       const fallbackPromises = Array.from({ length: Math.min(totalImages, 4) }, async (_, i) => {
         const bg = backgrounds[i % backgrounds.length].replace(/_/g, " ");
         const outfit = outfits[i % outfits.length].replace(/_/g, " ");
@@ -165,7 +180,7 @@ export async function POST(req: NextRequest) {
               body: JSON.stringify({
                 input: { prompt, input_image: referencePhotoUrl, aspect_ratio: "3:4", output_format: "jpg" },
                 webhook: `https://haloshot.com/api/generate/webhook`,
-                webhook_events_filter: ["completed", "failed"],
+                webhook_events_filter: ["completed"],
               }),
             }
           );
@@ -181,6 +196,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (predictionIds.length === 0) {
+      log("ALL predictions failed — returning 503");
       return NextResponse.json(
         { error: "All models are currently unavailable. Please try again in a few minutes." },
         { status: 503 }
@@ -205,6 +221,7 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
 
+    log("job created, returning to client", { jobId: job?.id, predictionIds: predictionIds.length, model: modelVersion });
     return NextResponse.json({
       jobId: job?.id || predictionIds[0],
       totalImages: predictionIds.length,
@@ -212,6 +229,7 @@ export async function POST(req: NextRequest) {
       status: "processing",
     });
   } catch (error) {
+    log("UNCAUGHT error", error instanceof Error ? error.message : String(error));
     console.error("Generate error:", error);
     const msg = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: msg }, { status: 500 });
