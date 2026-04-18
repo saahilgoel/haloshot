@@ -82,13 +82,20 @@ export function GenerationProgress({ status, presetName, numImages, errorMessage
     );
   }
 
-  if (status === "failed") {
+  if (status === "failed" || status === "canceled") {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center animate-in fade-in duration-300">
         <XCircle className="h-16 w-16 text-red-400" />
         <div>
-          <h3 className="text-xl font-display font-bold text-white">Generation failed</h3>
-          <p className="text-white/50 mt-1">{errorMessage || "Something went wrong. Please try again."}</p>
+          <h3 className="text-xl font-display font-bold text-white">
+            {status === "canceled" ? "Generation canceled" : "Generation failed"}
+          </h3>
+          <p className="text-white/50 mt-1">
+            {errorMessage ||
+              (status === "canceled"
+                ? "The job timed out before completing. No charge — try again?"
+                : "Something went wrong. Please try again.")}
+          </p>
         </div>
         {onRetry && (
           <button

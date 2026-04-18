@@ -131,14 +131,18 @@ export default function GeneratePage() {
     });
   };
 
-  // When generation completes or has partial results, move to results
+  // When generation completes or has partial results, move to results.
+  // "canceled" with partial images counts too — e.g. cron auto-cancel after
+  // the second prediction's webhook was lost to a race. Show what we have.
   useEffect(() => {
     if (step !== "generating") return;
-    if ((isComplete || isFailed) && generatedImages.length > 0) {
+    const terminalWithImages =
+      (isComplete || isFailed || job?.status === "canceled") && generatedImages.length > 0;
+    if (terminalWithImages) {
       setStep("results");
     }
-    // If failed with zero images, GenerationProgress will show the error
-  }, [step, isComplete, isFailed, generatedImages.length]);
+    // If terminal with zero images, GenerationProgress shows the error
+  }, [step, isComplete, isFailed, job?.status, generatedImages.length]);
 
   // Auto-transition: if we have images and job seems stuck, show results
   useEffect(() => {
@@ -440,7 +444,7 @@ export default function GeneratePage() {
                 modelName={model}
                 completedCount={generatedImages.length}
                 errorMessage={error || undefined}
-                onRetry={isFailed ? handleGenerate : undefined}
+                onRetry={(isFailed || job?.status === "canceled") ? handleGenerate : undefined}
               />
 
               {/* Kill switch — visible while still generating with zero or partial

@@ -107,16 +107,10 @@ export async function POST(req: NextRequest) {
         thumbnailUrl = permanentUrl;
       }
 
-      // Append to existing generated images
-      const existingUrls = job.generated_image_urls || [];
-      const updatedUrls = [...existingUrls, permanentUrl];
-
-      // Check if all predictions are done
-      const totalPredictions = (job.replicate_prediction_id || "").split(",").length;
-      const allDone = updatedUrls.length >= totalPredictions;
-      log(predictionId, `progress: ${updatedUrls.length}/${totalPredictions}${allDone ? " — COMPLETE" : ""}`);
-
-      // Estimate cost per image based on model
+      // Atomic append via RPC. The function takes a row-level lock, so two
+      // webhooks firing in the same second can't both read [] and clobber
+      // each other. Previously this was a read-modify-write that lost
+      // concurrent images — see migration 003.
       const costPerImage: Record<string, number> = {
         "nano-banana-2": 0.003,
         "nano-banana": 0.0015,
@@ -126,19 +120,22 @@ export async function POST(req: NextRequest) {
         "flux-dev": 0.0025,
       };
       const perImage = costPerImage[job.model_version] || 0.003;
-      const estimatedCost = updatedUrls.length * perImage;
 
-      await supabase
-        .from("generation_jobs")
-        .update({
-          generated_image_urls: updatedUrls,
-          similarity_scores: updatedUrls.map(() => 0.85),
-          status: allDone ? "completed" : "processing",
-          completed_at: allDone ? new Date().toISOString() : null,
-          processing_time_ms: metrics?.predict_time ? Math.round(metrics.predict_time * 1000) : null,
-          cost_usd: estimatedCost,
-        })
-        .eq("id", job.id);
+      const { data: updatedJob, error: rpcErr } = await supabase.rpc("append_generated_image", {
+        p_job_id: job.id,
+        p_url: permanentUrl,
+        p_similarity: 0.85,
+        p_processing_time_ms: metrics?.predict_time ? Math.round(metrics.predict_time * 1000) : null,
+        p_cost_per_image: perImage,
+      });
+
+      if (rpcErr) {
+        log(predictionId, "append_generated_image RPC FAILED", rpcErr.message);
+      } else {
+        const newCount = updatedJob?.generated_image_urls?.length || 0;
+        const totalPredictions = (job.replicate_prediction_id || "").split(",").length;
+        log(predictionId, `atomic append ok: ${newCount}/${totalPredictions} (status=${updatedJob?.status})`);
+      }
 
       // Save each new image to gallery
       const { data: savedHs } = await supabase.from("saved_headshots").insert({
@@ -151,8 +148,9 @@ export async function POST(req: NextRequest) {
       }).select("id").single();
       savedHeadshot = savedHs;
 
-      // If all done, update user generation count
-      if (allDone) {
+      // If all done (status flipped to completed inside the RPC),
+      // bump the user's lifetime generation counter. This runs once per job.
+      if (updatedJob?.status === "completed") {
         const { data: userProfile } = await supabase
           .from("profiles")
           .select("generations_count_total")
