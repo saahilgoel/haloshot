@@ -40,9 +40,18 @@ export function HeadshotGrid({
     onFavorite?.(url);
   };
 
+  // Single image gets a hero treatment; multiple images go into a responsive grid.
+  const isHero = images.length === 1;
+
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+      <div
+        className={cn(
+          isHero
+            ? "flex justify-center"
+            : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4",
+        )}
+      >
         {images.map((url, index) => {
           const score = similarityScores[index];
           const isFav = favorites.has(url);
@@ -50,7 +59,10 @@ export function HeadshotGrid({
           return (
             <div
               key={url}
-              className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-white/5"
+              className={cn(
+                "group relative aspect-[3/4] rounded-2xl overflow-hidden bg-white/5",
+                isHero && "w-full max-w-sm ring-1 ring-halo-500/25 shadow-[0_20px_60px_-20px_rgba(245,166,35,0.35)]",
+              )}
             >
               {/* Image */}
               <img

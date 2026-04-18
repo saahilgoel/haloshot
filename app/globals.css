@@ -75,13 +75,23 @@
   html,
   body {
     /* Kill horizontal scroll and pinch-zoom drift on mobile. */
-    overflow-x: hidden;
+    overflow-x: clip;
     overscroll-behavior-x: none;
-    /* Block iOS double-tap zoom but keep pan/scroll. */
-    touch-action: pan-x pan-y;
+    max-width: 100vw;
     /* Prevent iOS from auto-enlarging text on rotation. */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+  }
+
+  body {
+    /* touch-action on body only — setting on html breaks sticky positioning in Safari. */
+    touch-action: pan-x pan-y;
+  }
+
+  /* Belt-and-suspenders: no child container should ever push the page wider than the viewport. */
+  #__next, main {
+    overflow-x: clip;
+    max-width: 100vw;
   }
 
   body {

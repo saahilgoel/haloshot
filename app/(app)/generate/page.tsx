@@ -412,7 +412,7 @@ export default function GeneratePage() {
                   <Button
                     onClick={handleGenerate}
                     disabled={isGenerating}
-                    className="w-full h-14 bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-base font-semibold gap-2 rounded-2xl shadow-lg shadow-violet-500/25"
+                    className="w-full h-14 bg-gradient-to-r from-halo-500 to-halo-400 hover:from-halo-400 hover:to-halo-300 text-base font-semibold gap-2 rounded-2xl text-black shadow-[0_0_0_1px_rgba(247,191,71,0.4),0_0_32px_rgba(245,166,35,0.45),0_10px_30px_-10px_rgba(245,166,35,0.6)] hover:shadow-[0_0_0_1px_rgba(247,191,71,0.6),0_0_48px_rgba(245,166,35,0.65),0_10px_30px_-10px_rgba(245,166,35,0.8)] transition-shadow"
                   >
                     <Sparkles className="h-5 w-5" />
                     Start My Glow-Up
@@ -464,9 +464,17 @@ export default function GeneratePage() {
 
           {/* Step 4: Results */}
           {step === "results" && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div className="text-center">
-                <h1 className="text-2xl font-display font-bold text-white">Your glow-up is ready.</h1>
+            <div className="space-y-5 animate-in fade-in duration-300 min-w-0">
+              {/* Hero header + score — compact on mobile, spacious on desktop */}
+              <div className="flex flex-col items-center text-center gap-1 pt-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-halo-400">
+                  Glow-up complete
+                </p>
+                <h1 className="text-2xl sm:text-3xl font-display font-bold text-white leading-tight">
+                  {generatedImages.length === 1
+                    ? "Your headshot is ready"
+                    : `${generatedImages.length} headshots, ranked`}
+                </h1>
                 {avgScore > 0 ? (
                   <ScoreReveal
                     score={avgScore}
@@ -474,8 +482,9 @@ export default function GeneratePage() {
                     presetName={selectedPresetData?.name}
                   />
                 ) : (
-                  <p className="text-white/50 mt-1 text-sm">
-                    Scoring your headshots...
+                  <p className="text-white/50 mt-2 text-sm flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Scoring your headshots…
                   </p>
                 )}
               </div>
@@ -496,32 +505,35 @@ export default function GeneratePage() {
                 }}
               />
 
-              <div className="flex gap-3">
+              {/* Primary action — full width, halo-glow. Secondary actions stacked underneath. */}
+              <div className="flex flex-col gap-2.5 pt-1">
                 <Button
-                  variant="outline"
-                  onClick={() => {
-                    setStep("style");
-                    setSelectedPreset(null);
-                  }}
-                  className="flex-1"
-                >
-                  Try Different Style
-                </Button>
-                <Button
-                  variant="outline"
                   onClick={handleGenerate}
                   disabled={isGenerating}
-                  className="flex-1"
+                  className="w-full h-12 bg-gradient-to-r from-halo-500 to-halo-400 hover:from-halo-400 hover:to-halo-300 text-black font-semibold gap-2 rounded-2xl shadow-[0_0_0_1px_rgba(247,191,71,0.35),0_8px_32px_-8px_rgba(245,166,35,0.55)]"
                 >
-                  <Sparkles className="h-4 w-4 mr-1" />
+                  <Sparkles className="h-4 w-4" />
                   Generate More
                 </Button>
-                <Button
-                  onClick={() => window.location.href = "/gallery"}
-                  className="flex-1 bg-violet-600 hover:bg-violet-700"
-                >
-                  View Gallery
-                </Button>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setStep("style");
+                      setSelectedPreset(null);
+                    }}
+                    className="h-11 border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-sm"
+                  >
+                    New Style
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = "/gallery"}
+                    className="h-11 border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-sm"
+                  >
+                    Gallery
+                  </Button>
+                </div>
               </div>
             </div>
           )}
