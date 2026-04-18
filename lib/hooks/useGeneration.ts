@@ -33,7 +33,11 @@ type JobRow = {
 const POLL_INTERVAL_MS = 4000;
 const NO_IMAGE_TIMEOUT_MS = 150_000;
 const STALL_TIMEOUT_MS = 210_000;
+// Any persisted job older than this is treated as abandoned and auto-canceled
+// on the next page load instead of being resumed.
+const STALE_RESUME_MS = 10 * 60_000;
 const ACTIVE_JOB_KEY = "haloshot:activeJobId";
+const ACTIVE_JOB_TS_KEY = "haloshot:activeJobStartedAt";
 
 function rowToJob(row: JobRow): GenerationJob {
   return {
@@ -53,17 +57,41 @@ function rowToJob(row: JobRow): GenerationJob {
 function persistActiveJob(jobId: string | null) {
   if (typeof window === "undefined") return;
   try {
-    if (jobId) localStorage.setItem(ACTIVE_JOB_KEY, jobId);
-    else localStorage.removeItem(ACTIVE_JOB_KEY);
+    if (jobId) {
+      localStorage.setItem(ACTIVE_JOB_KEY, jobId);
+      localStorage.setItem(ACTIVE_JOB_TS_KEY, String(Date.now()));
+    } else {
+      localStorage.removeItem(ACTIVE_JOB_KEY);
+      localStorage.removeItem(ACTIVE_JOB_TS_KEY);
+    }
   } catch {}
 }
 
-export function getPersistedJobId(): string | null {
+export function getPersistedJobId(): { jobId: string; stale: boolean } | null {
   if (typeof window === "undefined") return null;
   try {
-    return localStorage.getItem(ACTIVE_JOB_KEY);
+    const jobId = localStorage.getItem(ACTIVE_JOB_KEY);
+    if (!jobId) return null;
+    const ts = Number(localStorage.getItem(ACTIVE_JOB_TS_KEY) || "0");
+    const stale = !ts || Date.now() - ts > STALE_RESUME_MS;
+    return { jobId, stale };
   } catch {
     return null;
+  }
+}
+
+export function clearPersistedJob() {
+  persistActiveJob(null);
+}
+
+export async function cancelJob(jobId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/generate/${jobId}/cancel`, { method: "POST" });
+    clearPersistedJob();
+    return res.ok;
+  } catch (err) {
+    console.warn("[useGeneration] cancel failed", err);
+    return false;
   }
 }
 
@@ -219,6 +247,19 @@ export function useGeneration() {
     watchJob(jobId);
   }, [watchJob]);
 
+  const cancelCurrent = useCallback(async () => {
+    const id = jobIdRef.current;
+    stopWatching();
+    setIsGenerating(false);
+    if (id) {
+      await cancelJob(id);
+    } else {
+      clearPersistedJob();
+    }
+    setJob(null);
+    setError(null);
+  }, [stopWatching]);
+
   useEffect(() => {
     return () => { stopWatching(); };
   }, [stopWatching]);
@@ -229,9 +270,11 @@ export function useGeneration() {
     error,
     startGeneration,
     resumeJob,
+    cancelCurrent,
     generatedImages: job?.generatedImageUrls || [],
     similarityScores: job?.similarityScores || [],
     isComplete: job?.status === "completed",
     isFailed: job?.status === "failed",
+    isCanceled: job?.status === "canceled",
   };
 }

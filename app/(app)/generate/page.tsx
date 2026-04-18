@@ -10,7 +10,7 @@ import { GenerationProgress } from "@/components/app/GenerationProgress";
 import { HeadshotGrid } from "@/components/app/HeadshotGrid";
 import { SubscriptionGate } from "@/components/app/SubscriptionGate";
 import { UsageIndicator } from "@/components/app/UsageIndicator";
-import { useGeneration, getPersistedJobId } from "@/lib/hooks/useGeneration";
+import { useGeneration, getPersistedJobId, cancelJob, clearPersistedJob } from "@/lib/hooks/useGeneration";
 import { useSubscription } from "@/lib/hooks/useSubscription";
 import { useUser } from "@/lib/hooks/useUser";
 import { STYLE_PRESETS } from "@/lib/ai/prompts";
@@ -34,7 +34,7 @@ export default function GeneratePage() {
   const [generationsUsed, setGenerationsUsed] = useState(0);
   const [hasExistingProfile, setHasExistingProfile] = useState(false);
 
-  const { startGeneration, resumeJob, job, isGenerating, error, generatedImages, similarityScores, isComplete, isFailed } = useGeneration();
+  const { startGeneration, resumeJob, cancelCurrent, job, isGenerating, error, generatedImages, similarityScores, isComplete, isFailed } = useGeneration();
 
   useEffect(() => {
     async function loadInitialData() {
@@ -55,12 +55,20 @@ export default function GeneratePage() {
       // Resume an in-flight job if the user bounced mid-generation.
       // Server-side work (Replicate + webhook → Supabase) kept running
       // regardless of whether the tab was open.
+      // If the job is "stale" (older than STALE_RESUME_MS), auto-cancel it
+      // instead of resuming — catches deploy-orphans and webhook silences.
       const pending = getPersistedJobId();
       if (pending) {
-        console.log("[generate] resuming in-flight job", pending);
-        setStep("generating");
-        resumeJob(pending);
-        return;
+        if (pending.stale) {
+          console.log("[generate] stale persisted job — auto-canceling", pending.jobId);
+          cancelJob(pending.jobId).catch(() => {});
+          clearPersistedJob();
+        } else {
+          console.log("[generate] resuming in-flight job", pending.jobId);
+          setStep("generating");
+          resumeJob(pending.jobId);
+          return;
+        }
       }
 
       // Check for existing face profile (from scoring)
@@ -428,12 +436,28 @@ export default function GeneratePage() {
               <GenerationProgress
                 status={job?.status || "queued"}
                 presetName={selectedPresetData?.name || ""}
-                numImages={job?.numImages || 4}
+                numImages={job?.numImages || 2}
                 modelName={model}
                 completedCount={generatedImages.length}
                 errorMessage={error || undefined}
                 onRetry={isFailed ? handleGenerate : undefined}
               />
+
+              {/* Kill switch — visible while still generating with zero or partial
+                  results. Hidden once we have everything; results step takes over. */}
+              {isGenerating && (
+                <div className="flex justify-center">
+                  <button
+                    onClick={async () => {
+                      await cancelCurrent();
+                      setStep("style");
+                    }}
+                    className="text-xs text-white/40 hover:text-white/70 underline underline-offset-2 transition-colors"
+                  >
+                    Cancel and start over
+                  </button>
+                </div>
+              )}
 
               {/* Show images as they arrive */}
               {generatedImages.length > 0 && (
