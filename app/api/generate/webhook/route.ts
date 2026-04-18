@@ -152,16 +152,73 @@ export async function POST(req: NextRequest) {
           .eq("id", job.user_id);
       }
     } else if (status === "failed") {
+      const isCapacityError = (predictionError || "").includes("unavailable") || (predictionError || "").includes("high demand") || (predictionError || "").includes("E003");
+
+      // If capacity error and model isn't already the fallback, retry with Flux Kontext Pro
+      if (isCapacityError && job.model_version !== "flux-kontext-pro" && job.model_version !== "flux-kontext-pro-edit") {
+        console.log(`Retrying prediction ${predictionId} with Flux Kontext Pro fallback`);
+        try {
+          // Get a reference photo URL from the face profile
+          const { data: faceProfile } = await supabase
+            .from("face_profiles")
+            .select("photo_urls")
+            .eq("id", job.face_profile_id)
+            .single();
+
+          const refUrl = faceProfile?.photo_urls?.[0];
+          if (refUrl) {
+            const preset = job.preset_id || "linkedin_executive";
+            const prompt = `Transform this photo into a professional headshot. Keep the person's face, features, and identity exactly the same. Studio lighting, sharp focus on eyes, professional photographer quality. Do not change the person's face or ethnicity.`;
+
+            const retryRes = await fetch(
+              "https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions",
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  input: { prompt, input_image: refUrl, aspect_ratio: "3:4", output_format: "jpg" },
+                  webhook: `https://haloshot.com/api/generate/webhook`,
+                  webhook_events_filter: ["completed"],
+                }),
+              }
+            );
+
+            if (retryRes.ok) {
+              const retryPrediction = await retryRes.json();
+              // Append the retry prediction ID to the job
+              const existingIds = job.replicate_prediction_id || "";
+              await supabase
+                .from("generation_jobs")
+                .update({
+                  replicate_prediction_id: existingIds + "," + retryPrediction.id,
+                  error_message: `Retrying with Flux Kontext Pro (original model unavailable)`,
+                })
+                .eq("id", job.id);
+
+              return NextResponse.json({ ok: true, retried: true });
+            }
+          }
+        } catch (retryErr) {
+          console.error("Fallback retry failed:", retryErr);
+        }
+      }
+
       // Re-read job to get latest state (other webhooks may have succeeded)
       const { data: freshJob } = await supabase
         .from("generation_jobs")
-        .select("generated_image_urls, status")
+        .select("generated_image_urls, status, replicate_prediction_id")
         .eq("id", job.id)
         .single();
 
       if (freshJob?.status !== "processing") return NextResponse.json({ ok: true });
 
       const currentUrls = freshJob?.generated_image_urls || [];
+      const totalPredictions = (freshJob?.replicate_prediction_id || "").split(",").filter(Boolean).length;
+      // Don't mark as failed yet if there are still pending predictions
+      // (other webhooks may still come in, or retries may be in flight)
 
       if (currentUrls.length > 0) {
         // Some images succeeded — mark completed with partial results

@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
           body: JSON.stringify({
             input: inputPayload,
             webhook: `https://haloshot.com/api/generate/webhook`,
-            webhook_events_filter: ["completed"],
+            webhook_events_filter: ["completed", "failed"],
           }),
         });
 
@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
               body: JSON.stringify({
                 input: { prompt, input_image: referencePhotoUrl, aspect_ratio: "3:4", output_format: "jpg" },
                 webhook: `https://haloshot.com/api/generate/webhook`,
-                webhook_events_filter: ["completed"],
+                webhook_events_filter: ["completed", "failed"],
               }),
             }
           );
