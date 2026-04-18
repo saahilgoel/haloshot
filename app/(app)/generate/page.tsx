@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 type Step = "upload" | "style" | "generating" | "results";
 
 export default function GeneratePage() {
-  const [step, setStep] = useState<Step>("upload");
+  const [step, setStep] = useState<Step | "loading">("loading");
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
   const [faceProfileId, setFaceProfileId] = useState<string | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
@@ -33,13 +33,12 @@ export default function GeneratePage() {
   const isProOrTeam = isPro || isTeam;
   const [generationsUsed, setGenerationsUsed] = useState(0);
   const [hasExistingProfile, setHasExistingProfile] = useState(false);
-  const [existingProfileNotice, setExistingProfileNotice] = useState(false);
 
   useEffect(() => {
     async function loadInitialData() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) { setStep("upload"); return; }
 
       // Load generation count
       const { data: prof } = await supabase
@@ -61,13 +60,14 @@ export default function GeneratePage() {
             setUploadedUrls(fp.photo_urls);
             setFaceProfileId(fp.id);
             setHasExistingProfile(true);
-            setExistingProfileNotice(true);
             setStep("style");
+            return;
           }
         }
       } catch (err) {
         console.error("Failed to check face profile:", err);
       }
+      setStep("upload");
     }
     loadInitialData();
   }, []);
@@ -210,6 +210,13 @@ export default function GeneratePage() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-4">
+          {/* Loading state */}
+          {step === "loading" && (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-6 w-6 animate-spin text-violet-400" />
+            </div>
+          )}
+
           {/* Step 1: Upload */}
           {step === "upload" && (
             <div className="space-y-4 animate-in fade-in duration-300">
@@ -220,7 +227,34 @@ export default function GeneratePage() {
 
               <UsageIndicator tier={tier} generationsUsed={generationsUsed} />
 
-              <UploadZone onUploadComplete={handleUploadComplete} />
+              {/* Show existing photos if returning from score */}
+              {hasExistingProfile && uploadedUrls.length > 0 && (
+                <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-4">
+                  <p className="text-sm text-violet-300 mb-3">Your scored photo is ready to use:</p>
+                  <div className="flex gap-2">
+                    {uploadedUrls.map((url, i) => (
+                      <img key={i} src={url} alt="Your photo" className="h-20 w-20 rounded-lg object-cover border border-white/10" />
+                    ))}
+                  </div>
+                  <Button
+                    onClick={() => setStep("style")}
+                    className="w-full mt-3 h-11 bg-violet-600 hover:bg-violet-700 text-sm font-medium gap-2"
+                  >
+                    Use this photo
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                  <button
+                    onClick={() => { setHasExistingProfile(false); setUploadedUrls([]); setFaceProfileId(null); }}
+                    className="w-full mt-2 text-xs text-white/40 hover:text-white/70 text-center"
+                  >
+                    Upload different photos instead
+                  </button>
+                </div>
+              )}
+
+              {!hasExistingProfile && (
+                <UploadZone onUploadComplete={handleUploadComplete} />
+              )}
 
               {uploadedUrls.length > 0 && !faceProfileId && (
                 <div className="flex items-center justify-center gap-3 h-11 rounded-md bg-violet-600/20 border border-violet-500/30 text-sm font-medium text-violet-300">
@@ -229,7 +263,7 @@ export default function GeneratePage() {
                 </div>
               )}
 
-              {uploadedUrls.length > 0 && faceProfileId && (
+              {uploadedUrls.length > 0 && faceProfileId && !hasExistingProfile && (
                 <Button
                   onClick={() => setStep("style")}
                   className="w-full h-11 bg-violet-600 hover:bg-violet-700 text-sm font-medium gap-2"
@@ -260,21 +294,33 @@ export default function GeneratePage() {
                 </div>
               </div>
 
-              {existingProfileNotice && (
-                <div className="flex items-center justify-between rounded-xl bg-violet-500/10 border border-violet-500/20 px-4 py-3">
-                  <p className="text-sm text-violet-300">Using your scored photo</p>
-                  <button
-                    onClick={() => {
-                      setExistingProfileNotice(false);
-                      setHasExistingProfile(false);
-                      setUploadedUrls([]);
-                      setFaceProfileId(null);
-                      setStep("upload");
-                    }}
-                    className="text-xs text-white/40 hover:text-white/70 underline underline-offset-2"
-                  >
-                    Upload new photos instead
-                  </button>
+              {/* Photo preview + upload more option */}
+              {uploadedUrls.length > 0 && (
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-1.5 shrink-0">
+                      {uploadedUrls.slice(0, 3).map((url, i) => (
+                        <img key={i} src={url} alt="Reference" className="h-12 w-12 rounded-lg object-cover border border-white/10" />
+                      ))}
+                      {uploadedUrls.length > 3 && (
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/5 text-xs text-white/40">
+                          +{uploadedUrls.length - 3}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white/70">{uploadedUrls.length} photo{uploadedUrls.length > 1 ? "s" : ""} loaded</p>
+                      <p className="text-[11px] text-white/30 mt-0.5">
+                        {uploadedUrls.length < 3 ? "Add more selfies for better accuracy" : "Ready to generate"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => { setStep("upload"); setHasExistingProfile(false); }}
+                      className="shrink-0 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/50 hover:text-white/80 hover:border-white/20 transition-colors"
+                    >
+                      {uploadedUrls.length < 3 ? "Add more" : "Change"}
+                    </button>
+                  </div>
                 </div>
               )}
 

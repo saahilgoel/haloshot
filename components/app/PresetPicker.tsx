@@ -134,26 +134,28 @@ export function PresetPicker({ selectedPreset, onSelect, isPro }: PresetPickerPr
                   {preset.icon}
                 </span>
 
-                {/* FREE badge */}
-                {preset.isFree && !isSelected && (
-                  <span className="absolute top-2 right-2 rounded-full bg-emerald-500/80 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
-                    Free
-                  </span>
-                )}
-
-                {/* Selected checkmark */}
-                {isSelected && (
+                {/* Badge: FREE, PRO, or selected checkmark */}
+                {isSelected ? (
                   <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-violet-500 text-white shadow-lg">
                     <Check className="h-3.5 w-3.5" strokeWidth={3} />
                   </div>
+                ) : preset.isFree ? (
+                  <span className="absolute top-2 right-2 rounded-full bg-emerald-500/80 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
+                    Free
+                  </span>
+                ) : (
+                  <span className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-violet-600/80 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider backdrop-blur-sm">
+                    <Sparkles className="h-2.5 w-2.5" />
+                    Pro
+                  </span>
                 )}
 
-                {/* PRO lock overlay */}
+                {/* Lock overlay for non-pro users on paid presets */}
                 {isLocked && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
                     <div className="flex items-center gap-1.5 rounded-full bg-violet-600/90 px-3 py-1 text-xs font-semibold text-white shadow-xl backdrop-blur">
-                      <Sparkles className="h-3 w-3" />
-                      PRO
+                      <Lock className="h-3 w-3" />
+                      Unlock with Pro
                     </div>
                   </div>
                 )}

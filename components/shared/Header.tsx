@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Menu, X, Moon, Sun } from "lucide-react";
+import { Bell, Menu, X, Moon, Sun, Crown } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/lib/hooks/useUser";
 
 const menuLinks = [
   { label: "Dashboard", href: "/dashboard" },
@@ -34,7 +35,9 @@ export function Header() {
   const { theme, setTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { profile } = useUser();
   const title = getPageTitle(pathname);
+  const isPro = profile?.subscription_tier === "pro" || profile?.subscription_tier === "team";
 
   useEffect(() => setMounted(true), []);
 
@@ -54,6 +57,12 @@ export function Header() {
             )}
           </button>
           <h1 className="font-display text-lg font-semibold">{title}</h1>
+          {isPro && (
+            <span className="flex items-center gap-0.5 rounded bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-violet-400">
+              <Crown className="h-2.5 w-2.5" />
+              Pro
+            </span>
+          )}
         </div>
 
         {/* Right: actions */}

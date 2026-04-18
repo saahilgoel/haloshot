@@ -151,7 +151,15 @@ export function Sidebar() {
           </div>
           {!collapsed && (
             <div className="flex-1 text-left">
-              <p className="truncate text-sm font-medium">{displayName}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="truncate text-sm font-medium">{displayName}</p>
+                {(profile?.subscription_tier === "pro" || profile?.subscription_tier === "team") && (
+                  <span className="flex items-center gap-0.5 rounded bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-violet-400">
+                    <Crown className="h-2.5 w-2.5" />
+                    Pro
+                  </span>
+                )}
+              </div>
               <p className="truncate text-xs text-muted-foreground">
                 {displayEmail}
               </p>
