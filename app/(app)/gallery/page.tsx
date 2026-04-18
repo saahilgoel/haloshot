@@ -53,6 +53,8 @@ const stylePresets = [
   "Editorial",
 ];
 
+const PAGE_SIZE = 50;
+
 interface Headshot {
   id: string;
   url: string;
@@ -78,6 +80,8 @@ export default function GalleryPage() {
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [pendingEdit, setPendingEdit] = useState(false);
   const [loadingImageId, setLoadingImageId] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     async function fetchHeadshots() {
@@ -86,14 +90,15 @@ export default function GalleryPage() {
       const { data, error } = await supabase
         .from("saved_headshots")
         .select("id, original_url, thumbnail_url, preset_id, is_favorite, halo_score, created_at")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(PAGE_SIZE);
 
       if (error) {
         console.error("Gallery fetch error:", error);
       }
 
       if (data && data.length > 0) {
-        setHeadshots(data.map(h => ({
+        const mapped = data.map(h => ({
           id: h.id,
           url: h.original_url,
           thumbnailUrl: h.thumbnail_url || h.original_url,
@@ -101,20 +106,29 @@ export default function GalleryPage() {
           isFavorite: h.is_favorite || false,
           haloScore: h.halo_score ?? undefined,
           date: new Date(h.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
-        })));
+        }));
+        setHeadshots(mapped);
+        // Initialize favorites from DB
+        const favSet = new Set<string>();
+        mapped.forEach(h => { if (h.isFavorite) favSet.add(h.id); });
+        setFavorites(favSet);
+        setHasMore(data.length >= PAGE_SIZE);
       }
       setLoading(false);
     }
     fetchHeadshots();
   }, []);
 
-  const toggleFavorite = (id: string) => {
+  const toggleFavorite = async (id: string) => {
+    const newVal = !favorites.has(id);
     setFavorites((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+    const supabase = createClient();
+    await supabase.from("saved_headshots").update({ is_favorite: newVal }).eq("id", id);
   };
 
   const handleEdit = async () => {
@@ -382,6 +396,7 @@ export default function GalleryPage() {
                             <DropdownMenuItem
                               className="text-red-400"
                               onClick={async () => {
+                                if (!confirm("Delete this headshot? This can't be undone.")) return;
                                 const supabase = createClient();
                                 await supabase.from("saved_headshots").delete().eq("id", headshot.id);
                                 setHeadshots(prev => prev.filter(h => h.id !== headshot.id));
@@ -425,11 +440,44 @@ export default function GalleryPage() {
             })}
           </div>
 
-          <div className="flex justify-center pt-4">
-            <Button variant="outline" className="border-white/10">
-              Load more
-            </Button>
-          </div>
+          {hasMore && (
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="outline"
+                className="border-white/10"
+                disabled={loadingMore}
+                onClick={async () => {
+                  setLoadingMore(true);
+                  const supabase = createClient();
+                  const { data } = await supabase
+                    .from("saved_headshots")
+                    .select("id, original_url, thumbnail_url, preset_id, is_favorite, halo_score, created_at")
+                    .order("created_at", { ascending: false })
+                    .range(headshots.length, headshots.length + PAGE_SIZE - 1);
+                  if (data && data.length > 0) {
+                    const mapped = data.map(h => ({
+                      id: h.id,
+                      url: h.original_url,
+                      thumbnailUrl: h.thumbnail_url || h.original_url,
+                      preset: STYLE_PRESETS[h.preset_id as keyof typeof STYLE_PRESETS]?.name || (h.preset_id || "Unknown").replace(/_/g, " "),
+                      isFavorite: h.is_favorite || false,
+                      haloScore: h.halo_score ?? undefined,
+                      date: new Date(h.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+                    }));
+                    setHeadshots(prev => [...prev, ...mapped]);
+                    mapped.forEach(h => { if (h.isFavorite) setFavorites(prev => { const next = new Set(prev); next.add(h.id); return next; }); });
+                    setHasMore(data.length >= PAGE_SIZE);
+                  } else {
+                    setHasMore(false);
+                  }
+                  setLoadingMore(false);
+                }}
+              >
+                {loadingMore ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Load more
+              </Button>
+            </div>
+          )}
         </>
       ) : (
         <div>

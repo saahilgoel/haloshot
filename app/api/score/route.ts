@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
 
     // Store in database if authenticated
     let scoreId: string | null = null;
+    let faceProfileId: string | null = null;
     if (user) {
       const { data: scoreRow, error: insertError } = await supabase
         .from("halo_scores")
@@ -115,10 +116,65 @@ export async function POST(req: NextRequest) {
           .update({ current_halo_score: result.overall_score })
           .eq("id", user.id);
       }
+
+      // If uploaded as a file (multipart), save to storage and create/update face_profile
+      if (contentType.includes("multipart/form-data") && photoUrl.startsWith("data:")) {
+        try {
+          const mimeMatch = photoUrl.match(/^data:(image\/\w+);/);
+          const ext = mimeMatch ? mimeMatch[1].split("/")[1] : "jpg";
+          const filePath = `references/${user.id}/${Date.now()}.${ext}`;
+
+          // Decode base64 and upload to Supabase Storage
+          const base64Data = photoUrl.split(",")[1];
+          const fileBuffer = Buffer.from(base64Data, "base64");
+
+          const { error: uploadError } = await supabase.storage
+            .from("headshots")
+            .upload(filePath, fileBuffer, {
+              contentType: mimeMatch ? mimeMatch[1] : "image/jpeg",
+              upsert: false,
+            });
+
+          if (!uploadError) {
+            const { data: publicUrlData } = supabase.storage
+              .from("headshots")
+              .getPublicUrl(filePath);
+
+            const publicUrl = publicUrlData.publicUrl;
+
+            // Deactivate existing face profiles
+            await supabase
+              .from("face_profiles")
+              .update({ is_active: false })
+              .eq("user_id", user.id);
+
+            // Create new face profile with the scored photo
+            const { data: faceProfile } = await supabase
+              .from("face_profiles")
+              .insert({
+                user_id: user.id,
+                photo_urls: [publicUrl],
+                detected_features: {},
+                status: "ready",
+                is_active: true,
+              })
+              .select("id")
+              .single();
+
+            if (faceProfile) {
+              faceProfileId = faceProfile.id;
+            }
+          }
+        } catch (fpError) {
+          console.error("Failed to save scored photo as face profile:", fpError);
+          // Non-blocking — scoring still succeeds
+        }
+      }
     }
 
     return NextResponse.json({
       id: scoreId,
+      ...(faceProfileId ? { face_profile_id: faceProfileId } : {}),
       ...result,
     });
   } catch (error) {

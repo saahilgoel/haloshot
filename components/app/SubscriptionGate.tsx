@@ -1,6 +1,7 @@
 "use client";
 
-import { Sparkles, X, Check, Zap, Crown } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, X, Check, Zap, Crown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -39,15 +40,23 @@ const triggerMessages: Record<string, { title: string; subtitle: string }> = {
 export function SubscriptionGate({ isOpen, onClose, trigger = "generation_limit", blurredImageUrl }: SubscriptionGateProps) {
   const message = triggerMessages[trigger];
   const pro = SUBSCRIPTION_TIERS.pro;
+  const [upgrading, setUpgrading] = useState(false);
+  const [upgraded, setUpgraded] = useState(false);
 
-  const handleCheckout = async (plan: "monthly" | "annual") => {
-    const priceId = plan === "monthly"
-      ? process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID
-      : process.env.NEXT_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID;
-
-    // For now, redirect to pricing page
-    // In production, this would call /api/stripe/checkout
-    window.location.href = "/pricing";
+  const handleCheckout = async () => {
+    setUpgrading(true);
+    try {
+      const res = await fetch("/api/upgrade", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setUpgraded(true);
+        setTimeout(() => window.location.reload(), 1500);
+      }
+    } catch (err) {
+      console.error("Upgrade failed:", err);
+    } finally {
+      setUpgrading(false);
+    }
   };
 
   return (
@@ -104,35 +113,15 @@ export function SubscriptionGate({ isOpen, onClose, trigger = "generation_limit"
                 12,847 professionals upgraded this month
               </p>
 
-              {/* Price cards */}
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {/* Monthly */}
-                <button
-                  onClick={() => handleCheckout("monthly")}
-                  className="rounded-2xl border border-white/10 p-4 text-left hover:border-violet-500/50 transition-all"
-                >
-                  <p className="text-sm text-white/50">Monthly</p>
-                  <p className="text-2xl font-display font-bold text-white mt-1">
-                    ${pro.priceMonthly}
-                    <span className="text-sm font-normal text-white/40">/mo</span>
-                  </p>
-                </button>
-
-                {/* Annual */}
-                <button
-                  onClick={() => handleCheckout("annual")}
-                  className="rounded-2xl border-2 border-violet-500 bg-violet-500/10 p-4 text-left relative"
-                >
-                  <Badge className="absolute -top-2.5 right-3 bg-lime-400 text-black text-[10px] border-0">
-                    SAVE 33%
-                  </Badge>
-                  <p className="text-sm text-violet-300">Annual</p>
-                  <p className="text-2xl font-display font-bold text-white mt-1">
-                    $6.67
-                    <span className="text-sm font-normal text-white/40">/mo</span>
-                  </p>
-                  <p className="text-xs text-white/40 mt-0.5">${pro.priceAnnual}/year</p>
-                </button>
+              {/* Alpha notice */}
+              <div className="rounded-2xl border-2 border-violet-500 bg-violet-500/10 p-4 text-center mb-6">
+                <Badge className="bg-lime-400 text-black text-[10px] border-0 mb-2">
+                  ALPHA
+                </Badge>
+                <p className="text-lg font-display font-bold text-white">
+                  Free during alpha
+                </p>
+                <p className="text-xs text-white/40 mt-1">No credit card required.</p>
               </div>
 
               {/* Features */}
@@ -147,15 +136,30 @@ export function SubscriptionGate({ isOpen, onClose, trigger = "generation_limit"
 
               {/* CTA */}
               <Button
-                onClick={() => handleCheckout("annual")}
+                onClick={handleCheckout}
+                disabled={upgrading || upgraded}
                 className="w-full h-12 bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-base font-semibold"
               >
-                <Zap className="h-4 w-4 mr-2" />
-                Get the Glow-Up
+                {upgraded ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Welcome to Pro! Refreshing...
+                  </>
+                ) : upgrading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Activating...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-4 w-4 mr-2" />
+                    Activate Pro (Free Alpha)
+                  </>
+                )}
               </Button>
 
               <p className="text-center text-xs text-white/30 mt-3">
-                Cancel anytime. 7-day money-back guarantee.
+                Free during alpha. No credit card required.
               </p>
             </div>
           </div>

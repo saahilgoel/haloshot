@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Moon, Sun, Upload, Trash2 } from "lucide-react";
+import { Moon, Sun, Upload, Trash2, Loader2, Check } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useUser } from "@/lib/hooks/useUser";
+import { createClient } from "@/lib/supabase/client";
 import {
   Card,
   CardContent,
@@ -75,6 +76,10 @@ export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const { user, profile } = useUser();
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [firstNameInput, setFirstNameInput] = useState("");
+  const [lastNameInput, setLastNameInput] = useState("");
 
   const fullName = profile?.full_name || user?.user_metadata?.full_name || "";
   const nameParts = fullName.split(" ");
@@ -83,6 +88,29 @@ export default function SettingsPage() {
   const email = user?.email || "";
 
   useEffect(() => setMounted(true), []);
+
+  // Initialize name inputs when profile loads
+  useEffect(() => {
+    if (profile || user) {
+      setFirstNameInput(firstName);
+      setLastNameInput(lastName);
+    }
+  }, [profile, user, firstName, lastName]);
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setSaving(true);
+    setSaved(false);
+    const newFullName = [firstNameInput, lastNameInput].filter(Boolean).join(" ");
+    const supabase = createClient();
+    await supabase
+      .from("profiles")
+      .update({ full_name: newFullName })
+      .eq("id", user.id);
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
 
   const settingsTabs = [
     { id: "profile", label: "Profile" },
@@ -137,7 +165,8 @@ export default function SettingsPage() {
                   <Label htmlFor="firstName">First name</Label>
                   <Input
                     id="firstName"
-                    defaultValue={firstName}
+                    value={firstNameInput}
+                    onChange={(e) => setFirstNameInput(e.target.value)}
                     placeholder="First name"
                   />
                 </div>
@@ -145,7 +174,8 @@ export default function SettingsPage() {
                   <Label htmlFor="lastName">Last name</Label>
                   <Input
                     id="lastName"
-                    defaultValue={lastName}
+                    value={lastNameInput}
+                    onChange={(e) => setLastNameInput(e.target.value)}
                     placeholder="Last name"
                   />
                 </div>
@@ -162,8 +192,24 @@ export default function SettingsPage() {
                   Contact support to change your email.
                 </p>
               </div>
-              <Button className="bg-violet-600 hover:bg-violet-500">
-                Save changes
+              <Button
+                onClick={handleSaveProfile}
+                disabled={saving}
+                className="bg-violet-600 hover:bg-violet-500"
+              >
+                {saved ? (
+                  <>
+                    <Check className="h-4 w-4 mr-1" />
+                    Saved
+                  </>
+                ) : saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save changes"
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -209,18 +255,16 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="opacity-60">
             <CardHeader>
               <CardTitle>Language</CardTitle>
               <CardDescription>
-                Select your preferred language.
+                Select your preferred language. <span className="text-violet-400 font-medium">Coming soon.</span>
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <select className="rounded-md border border-input bg-background px-3 py-2 text-sm">
+              <select disabled className="rounded-md border border-input bg-background px-3 py-2 text-sm opacity-50 cursor-not-allowed">
                 <option value="en">English</option>
-                <option value="hi">Hindi</option>
-                <option value="es">Spanish</option>
               </select>
             </CardContent>
           </Card>
@@ -230,30 +274,31 @@ export default function SettingsPage() {
       {/* Privacy Tab */}
       {activeTab === "privacy" && (
         <div className="space-y-6">
-          <Card>
+          <Card className="opacity-60">
             <CardHeader>
               <CardTitle>Download Your Data</CardTitle>
               <CardDescription>
                 Take your glow-up with you. Get a copy of all your data including headshots and account info.
+                <span className="text-violet-400 font-medium"> Coming soon.</span>
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline">Request data export</Button>
+              <Button variant="outline" disabled>Request data export</Button>
             </CardContent>
           </Card>
 
-          <Card className="border-destructive/30">
+          <Card className="border-destructive/30 opacity-60">
             <CardHeader>
               <CardTitle className="text-destructive">
                 Delete Account
               </CardTitle>
               <CardDescription>
-                Permanently delete your account and all associated data. Your halo disappears forever. This
-                action cannot be undone.
+                Permanently delete your account and all associated data. Your halo disappears forever.
+                <span className="text-violet-400 font-medium"> Coming soon.</span>
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="destructive">
+              <Button variant="destructive" disabled>
                 <Trash2 className="h-4 w-4" />
                 Delete account
               </Button>

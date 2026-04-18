@@ -60,28 +60,28 @@ export default function DashboardPage() {
     async function fetchRecent() {
       const supabase = createClient();
 
-      // Get all for stats
-      const { data: all } = await supabase
-        .from("saved_headshots")
-        .select("halo_score")
-        .not("halo_score", "is", null);
+      // Single query: get total count and avg score via count + recent 8 for display
+      const [countRes, recentRes] = await Promise.all([
+        supabase
+          .from("saved_headshots")
+          .select("halo_score", { count: "exact", head: false })
+          .not("halo_score", "is", null),
+        supabase
+          .from("saved_headshots")
+          .select("id, original_url, preset_id, halo_score, created_at")
+          .order("created_at", { ascending: false })
+          .limit(8),
+      ]);
 
-      if (all && all.length > 0) {
-        setTotalHeadshots(all.length);
-        const scores = all.map(h => h.halo_score as number);
+      if (countRes.data && countRes.data.length > 0) {
+        setTotalHeadshots(countRes.count ?? countRes.data.length);
+        const scores = countRes.data.map(h => h.halo_score as number);
         setAvgScore(Math.round(scores.reduce((a, b) => a + b, 0) / scores.length));
       }
 
-      // Get recent 8 for display
-      const { data } = await supabase
-        .from("saved_headshots")
-        .select("id, original_url, preset_id, halo_score, created_at")
-        .order("created_at", { ascending: false })
-        .limit(8);
-
-      if (data && data.length > 0) {
-        setTotalHeadshots(prev => prev || data.length);
-        setRecentHeadshots(data.map(h => ({
+      if (recentRes.data && recentRes.data.length > 0) {
+        setTotalHeadshots(prev => prev || recentRes.data!.length);
+        setRecentHeadshots(recentRes.data.map(h => ({
           id: h.id,
           url: h.original_url,
           preset: presetName(h.preset_id || "Unknown"),
@@ -153,11 +153,14 @@ export default function DashboardPage() {
               </div>
 
               <Button
+                asChild
                 variant="outline"
                 className="shrink-0 gap-2 border-halo/20 text-halo hover:bg-halo/10 hover:text-halo"
               >
-                <RefreshCw className="h-4 w-4" />
-                Re-score
+                <Link href="/score">
+                  <RefreshCw className="h-4 w-4" />
+                  Re-score
+                </Link>
               </Button>
             </CardContent>
           </Card>

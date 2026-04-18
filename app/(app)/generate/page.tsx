@@ -32,22 +32,44 @@ export default function GeneratePage() {
   const { tier, isPro, isTeam } = useSubscription();
   const isProOrTeam = isPro || isTeam;
   const [generationsUsed, setGenerationsUsed] = useState(0);
+  const [hasExistingProfile, setHasExistingProfile] = useState(false);
+  const [existingProfileNotice, setExistingProfileNotice] = useState(false);
 
   useEffect(() => {
-    async function loadGenerationCount() {
+    async function loadInitialData() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: profile } = await supabase
+
+      // Load generation count
+      const { data: prof } = await supabase
         .from("profiles")
         .select("generations_count_total")
         .eq("id", user.id)
         .single();
-      if (profile) {
-        setGenerationsUsed(profile.generations_count_total || 0);
+      if (prof) {
+        setGenerationsUsed(prof.generations_count_total || 0);
+      }
+
+      // Check for existing face profile (from scoring)
+      try {
+        const res = await fetch("/api/face-profile");
+        const data = await res.json();
+        if (data.profiles && data.profiles.length > 0) {
+          const fp = data.profiles[0];
+          if (fp.photo_urls?.length > 0 && fp.status === "ready") {
+            setUploadedUrls(fp.photo_urls);
+            setFaceProfileId(fp.id);
+            setHasExistingProfile(true);
+            setExistingProfileNotice(true);
+            setStep("style");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check face profile:", err);
       }
     }
-    loadGenerationCount();
+    loadInitialData();
   }, []);
 
   const { startGeneration, job, isGenerating, error, generatedImages, similarityScores, isComplete, isFailed } = useGeneration();
@@ -107,7 +129,7 @@ export default function GeneratePage() {
       if (generatedImages.length > 0) {
         setStep("results");
       }
-    }, 90000);
+    }, 60000);
     return () => clearTimeout(timer);
   }, [step, generatedImages.length]);
 
@@ -237,6 +259,24 @@ export default function GeneratePage() {
                   <p className="text-white/50 mt-1">Pick a look. Each one is optimized for different perception dimensions.</p>
                 </div>
               </div>
+
+              {existingProfileNotice && (
+                <div className="flex items-center justify-between rounded-xl bg-violet-500/10 border border-violet-500/20 px-4 py-3">
+                  <p className="text-sm text-violet-300">Using your scored photo</p>
+                  <button
+                    onClick={() => {
+                      setExistingProfileNotice(false);
+                      setHasExistingProfile(false);
+                      setUploadedUrls([]);
+                      setFaceProfileId(null);
+                      setStep("upload");
+                    }}
+                    className="text-xs text-white/40 hover:text-white/70 underline underline-offset-2"
+                  >
+                    Upload new photos instead
+                  </button>
+                </div>
+              )}
 
               <PresetPicker
                 selectedPreset={selectedPreset}
